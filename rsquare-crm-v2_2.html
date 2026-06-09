@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rsquare CRM</title>
+<style>
+  :root {
+    --bg:#f7f6f3; --surface:#fff; --border:#e8e4dc; --border-strong:#ccc8bf;
+    --text:#1a1916; --muted:#7a7771; --hint:#b0ada6;
+    --accent:#c0392b; --accent-soft:#fdf0ee;
+    --radius:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+
+  /* LOGIN */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;width:380px;text-align:center}
+  .login-logo{width:44px;height:44px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;margin:0 auto 16px}
+  .login-title{font-size:20px;font-weight:600;margin-bottom:6px}
+  .login-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+  .login-card input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;margin-bottom:12px;background:var(--surface);color:var(--text)}
+  .login-card input:focus{outline:none;border-color:var(--border-strong)}
+  .btn-login{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:12px;font-size:14px;font-weight:500;cursor:pointer}
+  .btn-login:hover{background:#a93226}
+  .btn-login:disabled{opacity:0.6;cursor:not-allowed}
+  .login-err{font-size:12px;color:var(--accent);margin-top:8px;min-height:18px}
+
+  /* TOPBAR */
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-mark{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px}
+  .logo-name{font-weight:600;font-size:15px}
+  .logo-sub{font-size:11px;color:var(--muted)}
+  .topbar-right{display:flex;align-items:center;gap:14px}
+  .user-badge{display:flex;align-items:center;gap:7px;font-size:13px}
+  .user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+  .role-tag{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+  .role-manager{background:#fff3e0;color:#e65100}
+  .role-staff{background:#e8eaf6;color:#3949ab}
+  .sync-status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:#ccc}
+  .sync-dot.ok{background:#4caf50}
+  .sync-dot.loading{background:#ff9800;animation:pulse 1s infinite}
+  .sync-dot.error{background:var(--accent)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .btn-add{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer}
+  .btn-add:hover{background:#a93226}
+  .btn-logout{background:none;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:12px;color:var(--muted);cursor:pointer}
+  .btn-logout:hover{color:var(--text);border-color:var(--border-strong)}
+
+  /* STATS */
+  .stats-bar{padding:16px 24px;display:flex;gap:12px;overflow-x:auto}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;min-width:110px;flex-shrink:0}
+  .stat-num{font-size:22px;font-weight:600;line-height:1}
+  .stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+  .stat-card.red .stat-num{color:var(--accent)}
+
+  /* FILTERS */
+  .filter-bar{padding:0 24px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .search-wrap{position:relative;flex:1;min-width:200px}
+  .search-wrap input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)}
+  .search-wrap input:focus{outline:none;border-color:var(--border-strong)}
+  .si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--hint);font-size:14px}
+  .filter-bar select{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text);cursor:pointer}
+  .filter-bar select:focus{outline:none;border-color:var(--border-strong)}
+  .filter-clear{font-size:12px;color:var(--accent);cursor:pointer;padding:4px 8px;white-space:nowrap}
+  .filter-clear:hover{text-decoration:underline}
+  .count-lbl{font-size:12px;color:var(--muted);white-space:nowrap}
+  .manager-note{font-size:11px;color:var(--muted);background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:3px 10px;white-space:nowrap}
+
+  /* TABLE */
+  .table-wrap{padding:0 24px 24px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+  thead tr{background:#f2f0eb}
+  th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;border-bottom:1px solid var(--border)}
+  th.sort{cursor:pointer;user-select:none}
+  th.sort:hover{color:var(--text)}
+  td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafaf8}
+  .co-name{font-weight:500;font-size:13px}
+  .co-meta{font-size:11px;color:var(--muted);margin-top:2px}
+
+  /* BADGES */
+  .badge{display:inline-block;font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
+  .bp0{background:#1a1916;color:#fff}
+  .bp1{background:#2e6da4;color:#fff}
+  .bp2{background:#5a8a3c;color:#fff}
+  .bp3{background:#8a7a3c;color:#fff}
+  .bs-success{background:#e8f5e9;color:#2e7d32}
+  .bs-deal{background:#e8eaf6;color:#3949ab}
+  .bs-fail{background:#fce4ec;color:#c62828}
+  .bsrc-call{background:#fff3e0;color:#e65100}
+  .bsrc-intro{background:#e8eaf6;color:#3949ab}
+  .bsrc-sns{background:#e8f5e9;color:#2e7d32}
+  .bsrc-dbr{background:#fce4ec;color:#c62828}
+  .bpr-sf{background:#f3e5f5;color:#6a1b9a}
+  .bpr-neg{background:#fff8e1;color:#f57f17}
+  .bpr-dd{background:#e8f5e9;color:#1b5e20}
+
+  /* ROW ACTIONS */
+  .row-acts{display:flex;gap:6px;opacity:0;transition:opacity .15s}
+  tr:hover .row-acts{opacity:1}
+  .btn-e,.btn-d{background:none;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--muted)}
+  .btn-e:hover{border-color:#2e6da4;color:#2e6da4}
+  .btn-d:hover{border-color:var(--accent);color:var(--accent)}
+  .readonly-note{font-size:11px;color:var(--hint);font-style:italic}
+
+  /* MODAL */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+  .overlay.open{display:flex}
+  .modal{background:var(--surface);border-radius:12px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+  .mh{padding:20px 24px 0;display:flex;justify-content:space-between;align-items:center}
+  .mt{font-size:16px;font-weight:600}
+  .mc{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
+  .mc:hover{color:var(--text)}
+  .mb{padding:16px 24px 24px}
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .ff{grid-column:1/-1}
+  .fg label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+  .fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)}
+  .fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--border-strong)}
+  .fg textarea{min-height:70px;resize:vertical;font-family:inherit}
+  .mf{padding:0 24px 20px;display:flex;justify-content:flex-end;gap:10px}
+  .btn-cm{background:none;border:1px solid var(--border);border-radius:var(--radius);padding:9px 18px;font-size:13px;cursor:pointer;color:var(--muted)}
+  .btn-sm{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer}
+  .btn-sm:hover{background:#a93226}
+  .btn-sm:disabled{opacity:.6;cursor:not-allowed}
+
+  /* EMPTY/LOADING */
+  .empty{text-align:center;padding:50px 20px;color:var(--muted)}
+  .lrow td{text-align:center;padding:40px;color:var(--muted)}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:#1a1916;color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.err{background:var(--accent)}
+
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-logo">RS</div>
+    <div class="login-title">Rsquare CRM</div>
+    <div class="login-sub">Đăng nhập bằng email công ty</div>
+    <input type="email" id="emailInput" placeholder="ten@rsquare.vn" autocomplete="email">
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">Đăng nhập</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="appWrap" class="hidden">
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark">RS</div>
+      <div>
+        <div class="logo-name">Rsquare CRM</div>
+        <div class="logo-sub">HCM Office Leasing</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="sync-status">
+        <div class="sync-dot loading" id="syncDot"></div>
+        <span id="syncText">Đang tải...</span>
+      </div>
+      <div class="user-badge">
+        <div class="user-avatar" id="userAvatar"></div>
+        <span id="userName"></span>
+        <span class="role-tag" id="roleTag"></span>
+      </div>
+      <button class="btn-add hidden" id="btnAdd" onclick="openModal()">+ Thêm khách</button>
+      <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card red"><div class="stat-num" id="st-total">—</div><div class="stat-label">Tổng khách</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-deal" style="color:#3949ab">—</div><div class="stat-label">Deal</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-success" style="color:#2e7d32">—</div><div class="stat-label">Success</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-fail" style="color:#c62828">—</div><div class="stat-label">Fail</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-p0">—</div><div class="stat-label">P0</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <span class="si">🔍</span>
+      <input type="text" id="search" placeholder="Tìm tên công ty, tòa nhà, quốc tịch..." oninput="applyFilters()">
+    </div>
+    <select id="f-status" onchange="applyFilters()">
+      <option value="">Tất cả trạng thái</option>
+      <option>Success</option><option>Deal</option><option>Fail</option>
+    </select>
+    <select id="f-priority" onchange="applyFilters()">
+      <option value="">Tất cả priority</option>
+      <option>P0</option><option>P1</option><option>P2</option><option>P3</option>
+    </select>
+    <select id="f-incharge" onchange="applyFilters()">
+      <option value="">Tất cả incharge</option>
+    </select>
+    <select id="f-source" onchange="applyFilters()">
+      <option value="">Tất cả source</option>
+      <option>CALL SALES</option><option>INTRO</option><option>SNS</option><option>DBR VISIT</option>
+    </select>
+    <select id="f-process" onchange="applyFilters()">
+      <option value="">Tất cả process</option>
+      <option>Send Flyer</option><option>Negotiate</option><option>Go DD</option>
+    </select>
+    <span class="filter-clear" onclick="clearFilters()">✕ Xoá filter</span>
+    <span class="count-lbl" id="countLbl"></span>
+    <span class="manager-note hidden" id="managerNote">👁 Đang xem toàn bộ team — thêm/sửa/xoá chỉ ảnh hưởng sheet của bạn</span>
+  </div>
+
+  <div class="table-wrap">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th>Công ty</th>
+          <th class="sort" onclick="sortBy(1)">Priority</th>
+          <th>Incharge</th>
+          <th class="sort" onclick="sortBy(3)">Status</th>
+          <th>Source</th>
+          <th>Size (m²)</th>
+          <th>Budget</th>
+          <th>Location</th>
+          <th>Expired</th>
+          <th>National</th>
+          <th>Process</th>
+          <th>Note</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr class="lrow"><td colspan="13">Vui lòng đăng nhập...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ══ MODAL ══ -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="mh">
+      <div class="mt" id="modalTitle">Thêm khách thuê mới</div>
+      <button class="mc" onclick="closeModal()">×</button>
+    </div>
+    <div class="mb">
+      <div class="fg">
+        <div class="ff"><label>Tên công ty *</label><input type="text" id="m-co" placeholder="VD: LOTUS INTERNATIONAL"></div>
+        <div><label>Priority</label><select id="m-pri"><option>P0</option><option>P1</option><option selected>P2</option><option>P3</option></select></div>
+        <div><label>Incharge</label><select id="m-inc"></select></div>
+        <div><label>Status</label><select id="m-sta"><option>Fail</option><option>Deal</option><option>Success</option></select></div>
+        <div><label>Source</label><select id="m-src"><option>CALL SALES</option><option>INTRO</option><option>SNS</option><option>DBR VISIT</option></select></div>
+        <div><label>Start Day</label><input type="text" id="m-sd" placeholder="VD: 01/06/2025"></div>
+        <div><label>Expired Day</label><input type="text" id="m-exp" placeholder="VD: Q4/2025 hoặc ASAP"></div>
+        <div><label>Min Size (m²)</label><input type="text" id="m-min" placeholder="VD: 200"></div>
+        <div><label>Max Size (m²)</label><input type="text" id="m-max" placeholder="VD: 500"></div>
+        <div><label>Max Budget ($)</label><input type="text" id="m-bud" placeholder="VD: $35"></div>
+        <div><label>Location</label><input type="text" id="m-loc" placeholder="VD: CBD, D1, BT"></div>
+        <div><label>National</label><input type="text" id="m-nat" placeholder="VD: VN, US, KR"></div>
+        <div><label>Type of Business</label><input type="text" id="m-typ" placeholder="VD: Tech, Logistics"></div>
+        <div><label>Process</label><select id="m-prc"><option>Send Flyer</option><option>Negotiate</option><option>Go DD</option></select></div>
+        <div class="ff"><label>Note</label><textarea id="m-note" placeholder="Ghi chú..."></textarea></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn-cm" onclick="closeModal()">Huỷ</button>
+      <button class="btn-sm" id="btnSave" onclick="saveRecord()">Lưu vào Sheets</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbxwG6kr6J6KOd4TfKrgNZHNbxunFrasATcetmPmZhv4Vd2-YipLCT7u40oO-29DTwwI-g/exec';
+
+let currentUser = null; // { email, name, role }
+let allData = [];
+let filtered = [];
+let editingRowIndex = null;
+let sortCol = -1, sortDir = 1;
+
+// ── LOGIN ──────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('emailInput').value.trim().toLowerCase();
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if (!email) { errEl.textContent = 'Vui lòng nhập email'; return; }
+  if (!email.endsWith('@rsquare.vn')) { errEl.textContent = 'Chỉ chấp nhận email @rsquare.vn'; return; }
+
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true; btn.textContent = 'Đang xác thực...';
+
+  try {
+    const res = await fetch(`${API}?action=login&email=${encodeURIComponent(email)}`);
+    const json = await res.json();
+    if (json.error) { errEl.textContent = 'Email không có quyền truy cập'; btn.disabled = false; btn.textContent = 'Đăng nhập'; return; }
+
+    currentUser = { email, name: json.name, role: json.role };
+    localStorage.setItem('rsq_user', JSON.stringify(currentUser));
+    showApp();
+  } catch(e) {
+    errEl.textContent = 'Lỗi kết nối. Thử lại.';
+    btn.disabled = false; btn.textContent = 'Đăng nhập';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('rsq_user');
+  currentUser = null;
+  allData = []; filtered = [];
+  document.getElementById('appWrap').classList.add('hidden');
+  document.getElementById('loginWrap').classList.remove('hidden');
+  document.getElementById('emailInput').value = '';
+  document.getElementById('loginErr').textContent = '';
+  document.getElementById('btnLogin').disabled = false;
+  document.getElementById('btnLogin').textContent = 'Đăng nhập';
+}
+
+function showApp() {
+  document.getElementById('loginWrap').classList.add('hidden');
+  document.getElementById('appWrap').classList.remove('hidden');
+
+  // Set user info
+  const initials = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userName').textContent = currentUser.name;
+  const roleTag = document.getElementById('roleTag');
+  roleTag.textContent = currentUser.role === 'manager' ? 'Manager' : 'Staff';
+  roleTag.className = 'role-tag ' + (currentUser.role === 'manager' ? 'role-manager' : 'role-staff');
+
+  // Cả manager và staff đều có thể thêm khách (ghi vào sheet riêng của mình)
+  document.getElementById('btnAdd').classList.remove('hidden');
+  if (currentUser.role === 'manager') {
+    document.getElementById('managerNote').classList.remove('hidden');
+  } else {
+    document.getElementById('managerNote').classList.add('hidden');
+  }
+
+  loadIncharge();
+  loadData();
+}
+
+// ── LOAD DATA ──────────────────────────────────────
+async function loadData() {
+  setSyncStatus('loading', 'Đang tải...');
+  try {
+    const res = await fetch(`${API}?action=getAll&email=${encodeURIComponent(currentUser.email)}`);
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    allData = json.data || [];
+    if (json.headers) buildColMap(json.headers);
+    syncInchargeFromData();
+    applyFilters();
+    updateStats();
+    setSyncStatus('ok', 'Đã đồng bộ');
+  } catch(e) {
+    setSyncStatus('error', 'Lỗi kết nối');
+    showToast('Không thể tải dữ liệu', true);
+    document.getElementById('tbody').innerHTML = '<tr class="lrow"><td colspan="13">Không thể tải dữ liệu. Kiểm tra kết nối.</td></tr>';
+  }
+}
+
+async function loadIncharge() {
+  try {
+    const res = await fetch(`${API}?action=getIncharge&email=${encodeURIComponent(currentUser.email)}`);
+    const json = await res.json();
+    const sel = document.getElementById('f-incharge');
+    const selM = document.getElementById('m-inc');
+    // Clear trước để tránh duplicate khi re-login
+    sel.innerHTML = '<option value="">Tất cả incharge</option>';
+    selM.innerHTML = '';
+    (json.data || []).forEach(name => {
+      sel.innerHTML += `<option value="${name}">${name}</option>`;
+      selM.innerHTML += `<option value="${name}">${name}</option>`;
+    });
+    selM.value = currentUser.name;
+  } catch(e) {}
+}
+
+// Sau khi data load xong, sync lại incharge filter từ data thực tế
+function syncInchargeFromData() {
+  const names = [...new Set(allData.map(r => String(v(r,'inc'))).filter(n => n && n !== ''))].sort();
+  const sel = document.getElementById('f-incharge');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Tất cả incharge</option>';
+  names.forEach(name => {
+    sel.innerHTML += `<option value="${name}">${name}</option>`;
+  });
+  sel.value = prev;
+}
+
+// col mapping — dynamic từ headers trả về API
+let colMap = {co:0,pri:1,inc:2,sta:3,neworder:4,sd:5,src:6,min:7,max:8,bud:9,loc:10,exp:11,nat:12,typ:13,prc:14,note:17};
+
+function buildColMap(headers) {
+  if (!headers || !headers.length) return;
+  const find = (keys) => {
+    for (const k of keys) {
+      const i = headers.findIndex(h => h.toLowerCase().includes(k.toLowerCase()));
+      if (i >= 0) return i;
+    }
+    return -1;
+  };
+  colMap = {
+    co:  find(['customer name', 'company']),
+    pri: find(['priority']),
+    inc: find(['incharge']),
+    sta: find(['status']),
+    neworder: find(['new order']),
+    sd:  find(['start day']),
+    src: find(['source']),
+    min: find(['min size']),
+    max: find(['max size']),
+    bud: find(['max budget', 'budget']),
+    loc: find(['location']),
+    exp: find(['expired']),
+    nat: find(['national']),
+    typ: find(['type of business', 'type']),
+    prc: find(['process']),
+    note: find(['note']),
+  };
+}
+
+function v(row, name) {
+  const i = colMap[name];
+  return (i !== undefined && i >= 0) ? (row[i] ?? '') : '';
+}
+
+// ── RENDER ─────────────────────────────────────────
+function applyFilters() {
+  const q  = document.getElementById('search').value.toLowerCase();
+  const fs = document.getElementById('f-status').value;
+  const fp = document.getElementById('f-priority').value;
+  const fi = document.getElementById('f-incharge').value;
+  const fso= document.getElementById('f-source').value;
+  const fpr= document.getElementById('f-process').value;
+
+  filtered = allData.filter(r => {
+    const co  = String(v(r,'co')).toLowerCase();
+    const loc = String(v(r,'loc')).toLowerCase();
+    const nat = String(v(r,'nat')).toLowerCase();
+    if (q && !co.includes(q) && !loc.includes(q) && !nat.includes(q)) return false;
+    if (fs  && String(v(r,'sta')).trim() !== fs.trim()) return false;
+    if (fp  && String(v(r,'pri')).trim() !== fp.trim()) return false;
+    if (fi  && String(v(r,'inc')).trim() !== fi.trim()) return false;
+    if (fso && String(v(r,'src')).trim() !== fso.trim()) return false;
+    if (fpr && String(v(r,'prc')).trim() !== fpr.trim()) return false;
+    return true;
+  });
+
+  if (sortCol >= 0) {
+    filtered.sort((a,b) => String(a[sortCol]||'').localeCompare(String(b[sortCol]||'')) * sortDir);
+  }
+
+  document.getElementById('countLbl').textContent = `${filtered.length} / ${allData.length} khách`;
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  const isManager = currentUser?.role === 'manager';
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr class="lrow"><td colspan="13"><div class="empty">🔍 Không tìm thấy kết quả</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((row) => {
+    const dataIdx = allData.indexOf(row);
+    const ri = dataIdx + 2;
+    const co  = v(row,'co'), pri = v(row,'pri'), inc = v(row,'inc');
+    const sta = v(row,'sta'), src = v(row,'src'), prc = v(row,'prc');
+    const minS= v(row,'min'), maxS= v(row,'max'), bud = v(row,'bud');
+    const loc = v(row,'loc'), exp = v(row,'exp'), nat = v(row,'nat');
+    const typ = v(row,'typ'), note= v(row,'note');
+
+    const sizeStr = (minS && minS!=='##') ? `${minS}${maxS&&maxS!=='##'?'–'+maxS:''}` : '—';
+    const budStr  = (bud  && bud !=='$xx') ? bud : '—';
+    const locStr  = (loc  && loc !=='Location') ? loc : '—';
+    const expStr  = (exp  && exp !=='Expired Day') ? exp : '—';
+    const natStr  = (nat  && nat !=='National') ? nat : '—';
+
+    // Tất cả đều có nút Sửa/Xoá — nhưng chỉ tác động sheet của mình
+    const actions = `<div class="row-acts">
+           <button class="btn-e" onclick="openEdit(${dataIdx})">Sửa</button>
+           <button class="btn-d" onclick="delRecord(${ri})">Xoá</button>
+         </div>`;
+
+    return `<tr>
+      <td><div class="co-name">${co}</div>${typ&&typ!=='Type of Business'?`<div class="co-meta">${typ}</div>`:''}</td>
+      <td><span class="badge bp${pri.toLowerCase().replace('p','')}">${pri||'—'}</span></td>
+      <td style="font-size:12px">${inc}</td>
+      <td><span class="badge bs-${(sta||'').toLowerCase()}">${sta||'—'}</span></td>
+      <td><span class="badge ${srcBadge(src)}">${src||'—'}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${sizeStr}</td>
+      <td style="font-size:12px;font-weight:500">${budStr}</td>
+      <td style="font-size:12px">${locStr}</td>
+      <td style="font-size:12px;color:var(--muted)">${expStr}</td>
+      <td><span class="badge" style="background:#f2f0eb;color:var(--muted)">${natStr}</span></td>
+      <td><span class="badge ${prcBadge(prc)}">${prc||'—'}</span></td>
+      <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${note}">${note?note.substring(0,40)+(note.length>40?'…':''):''}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+function srcBadge(s){ if(!s)return''; if(s.includes('CALL'))return'bsrc-call'; if(s==='INTRO')return'bsrc-intro'; if(s==='SNS')return'bsrc-sns'; if(s.includes('DBR'))return'bsrc-dbr'; return''; }
+function prcBadge(p){ if(!p)return''; if(p.includes('Flyer'))return'bpr-sf'; if(p.includes('Neg'))return'bpr-neg'; if(p.includes('DD'))return'bpr-dd'; return''; }
+
+function updateStats() {
+  document.getElementById('st-total').textContent   = allData.length;
+  document.getElementById('st-deal').textContent    = allData.filter(r=>v(r,'sta')==='Deal').length;
+  document.getElementById('st-success').textContent = allData.filter(r=>v(r,'sta')==='Success').length;
+  document.getElementById('st-fail').textContent    = allData.filter(r=>v(r,'sta')==='Fail').length;
+  document.getElementById('st-p0').textContent      = allData.filter(r=>v(r,'pri')==='P0').length;
+}
+
+function sortBy(col) {
+  sortCol = (sortCol===col) ? col : col; sortDir = (sortCol===col) ? sortDir*-1 : 1; sortCol=col;
+  applyFilters();
+}
+function clearFilters() {
+  document.getElementById('search').value='';
+  ['f-status','f-priority','f-incharge','f-source','f-process'].forEach(id=>document.getElementById(id).value='');
+  applyFilters();
+}
+function setSyncStatus(state,text) {
+  document.getElementById('syncDot').className='sync-dot '+state;
+  document.getElementById('syncText').textContent=text;
+}
+
+// ── MODAL ──────────────────────────────────────────
+function openModal() {
+  editingRowIndex = null;
+  document.getElementById('modalTitle').textContent = 'Thêm khách thuê mới';
+  document.getElementById('btnSave').textContent = 'Lưu vào Sheets';
+  ['m-co','m-sd','m-exp','m-min','m-max','m-bud','m-loc','m-nat','m-typ','m-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m-pri').value='P2';
+  document.getElementById('m-sta').value='Fail';
+  document.getElementById('m-src').value='CALL SALES';
+  document.getElementById('m-prc').value='Send Flyer';
+  document.getElementById('m-inc').value=currentUser.name;
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(dataIdx) {
+  const row = allData[dataIdx];
+  editingRowIndex = dataIdx + 2;
+  document.getElementById('modalTitle').textContent='Chỉnh sửa khách thuê';
+  document.getElementById('btnSave').textContent='Cập nhật Sheets';
+  document.getElementById('m-co').value  = v(row,'co');
+  document.getElementById('m-pri').value = v(row,'pri')||'P2';
+  document.getElementById('m-inc').value = v(row,'inc');
+  document.getElementById('m-sta').value = v(row,'sta')||'Fail';
+  document.getElementById('m-src').value = v(row,'src')||'CALL SALES';
+  document.getElementById('m-sd').value  = v(row,'sd');
+  document.getElementById('m-exp').value = v(row,'exp')==='Expired Day'?'':v(row,'exp');
+  document.getElementById('m-min').value = v(row,'min')==='##'?'':v(row,'min');
+  document.getElementById('m-max').value = v(row,'max')==='##'?'':v(row,'max');
+  document.getElementById('m-bud').value = v(row,'bud')==='$xx'?'':v(row,'bud');
+  document.getElementById('m-loc').value = v(row,'loc')==='Location'?'':v(row,'loc');
+  document.getElementById('m-nat').value = v(row,'nat')==='National'?'':v(row,'nat');
+  document.getElementById('m-typ').value = v(row,'typ')==='Type of Business'?'':v(row,'typ');
+  document.getElementById('m-prc').value = v(row,'prc')||'Send Flyer';
+  document.getElementById('m-note').value= v(row,'note');
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); editingRowIndex=null; }
+
+// ── SAVE ───────────────────────────────────────────
+async function saveRecord() {
+  const co = document.getElementById('m-co').value.trim();
+  if (!co) { showToast('Vui lòng nhập tên công ty',true); return; }
+  const btn = document.getElementById('btnSave');
+  btn.disabled=true; btn.textContent='Đang lưu...';
+  setSyncStatus('loading','Đang lưu...');
+
+  const row = new Array(18).fill('');
+  row[0]=co; row[1]=document.getElementById('m-pri').value;
+  row[2]=document.getElementById('m-inc').value; row[3]=document.getElementById('m-sta').value;
+  row[4]=false; row[5]=document.getElementById('m-sd').value;
+  row[6]=document.getElementById('m-src').value;
+  row[7]=document.getElementById('m-min').value||'##';
+  row[8]=document.getElementById('m-max').value||'##';
+  row[9]=document.getElementById('m-bud').value||'$xx';
+  row[10]=document.getElementById('m-loc').value||'Location';
+  row[11]=document.getElementById('m-exp').value||'Expired Day';
+  row[12]=document.getElementById('m-nat').value||'National';
+  row[13]=document.getElementById('m-typ').value||'Type of Business';
+  row[14]=document.getElementById('m-prc').value;
+  row[17]=document.getElementById('m-note').value;
+
+  try {
+    const payload = editingRowIndex
+      ? {action:'update', email:currentUser.email, rowIndex:editingRowIndex, row}
+      : {action:'add',    email:currentUser.email, row};
+
+    const res = await fetch(API,{method:'POST',body:JSON.stringify(payload)});
+    const json = await res.json();
+    if (!json.success) throw new Error();
+
+    if (editingRowIndex) { allData[editingRowIndex-2]=row; showToast('Đã cập nhật '+co); }
+    else { allData.push(row); showToast('Đã thêm '+co); }
+    applyFilters(); updateStats(); closeModal();
+    setSyncStatus('ok','Đã đồng bộ');
+  } catch(e) {
+    showToast('Lỗi khi lưu. Thử lại.',true);
+    setSyncStatus('error','Lỗi');
+  } finally {
+    btn.disabled=false;
+    btn.textContent=editingRowIndex?'Cập nhật Sheets':'Lưu vào Sheets';
+  }
+}
+
+// ── DELETE ─────────────────────────────────────────
+async function delRecord(ri) {
+  if (!confirm('Xoá khách này khỏi sheet của bạn?')) return;
+  setSyncStatus('loading','Đang xoá...');
+  try {
+    const res = await fetch(API,{method:'POST',body:JSON.stringify({action:'delete',email:currentUser.email,rowIndex:ri})});
+    const json = await res.json();
+    if (!json.success) throw new Error();
+    allData.splice(ri-2,1);
+    applyFilters(); updateStats();
+    showToast('Đã xoá'); setSyncStatus('ok','Đã đồng bộ');
+  } catch(e) {
+    showToast('Lỗi khi xoá',true); setSyncStatus('error','Lỗi');
+  }
+}
+
+// ── TOAST ──────────────────────────────────────────
+function showToast(msg,isErr=false) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(isErr?' err':'');
+  setTimeout(()=>t.className='toast',3000);
+}
+
+// ── KEYBOARD ───────────────────────────────────────
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('loginWrap').style.display!=='none') doLogin(); });
+document.getElementById('emailInput').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('modal').addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+// ── AUTO LOGIN ─────────────────────────────────────
+const saved = localStorage.getItem('rsq_user');
+if (saved) {
+  try {
+    currentUser = JSON.parse(saved);
+    showApp();
+  } catch(e) { localStorage.removeItem('rsq_user'); }
+}
+</script>
+</body>
+</html>
