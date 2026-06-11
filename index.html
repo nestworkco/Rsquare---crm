@@ -282,17 +282,97 @@ tbody tr:hover .row-acts{opacity:1}
   .kpi-cards{grid-template-columns:repeat(2,1fr)}
   .dash-charts{grid-template-columns:1fr}
 }
-@media (max-width:720px){
-  .topbar{padding:0 16px}
-  .nav-tabs{padding:0 16px;overflow-x:auto}
-  #tab-crm,.kpi-wrap{padding:14px 14px 48px}
+
+/* TABLET */
+@media (max-width:860px){
+  .topbar{padding:0 16px;gap:8px}
+  .logo-module{display:none}
+  #tab-crm,.kpi-wrap{padding:16px 16px 48px}
+  .nav-tabs{padding:0 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .nav-tab{white-space:nowrap}
+  .dash-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* MOBILE */
+@media (max-width:680px){
+  .topbar{height:52px;padding:0 12px;gap:8px}
+  .user-name,.role-tag{display:none}
+  .user-badge{padding:3px;border:none;background:transparent}
+  .sync-status span:not(.sync-dot){display:none}
+  .sync-status{padding:4px}
+  .btn-add{padding:8px 12px;font-size:0;gap:0}
+  .btn-add::after{content:'+';font-size:18px;font-weight:700}
+  .btn-logout{padding:7px 10px;font-size:0}
+  .btn-logout::after{content:'\23CF';font-size:15px}
+
+  .nav-tabs{top:52px;padding:0 12px}
+  .nav-tab{padding:12px 14px 10px;font-size:13px}
+
+  #tab-crm{padding:12px 12px 56px}
+  .kpi-wrap{padding:12px 12px 56px}
+
   .stats-bar{grid-template-columns:repeat(2,1fr)}
-  .stat-card:nth-child(3){border-left:none}
-  .stat-card:nth-child(n+3){border-top:1px solid var(--border)}
-  .user-name{display:none}
-  .fg{grid-template-columns:1fr 1fr}
-  .row-acts{opacity:1}
-  .table-wrap{max-height:none}
+  .stat-card{padding:12px 14px 11px;border-left:none!important;border-top:1px solid var(--border)}
+  .stat-card:nth-child(1),.stat-card:nth-child(2){border-top:none}
+  .stat-card:nth-child(odd){border-right:1px solid var(--border)}
+  .stat-num{font-size:22px}
+  .stat-label{font-size:10px}
+
+  .filter-bar{padding:10px 12px;gap:7px}
+  .search-wrap{flex:1 1 100%;max-width:100%;min-width:0}
+  .filter-bar select{flex:1 1 calc(50% - 4px);min-width:0;font-size:12px}
+  .count-lbl{flex:1 1 100%;margin-left:0;text-align:left;order:99}
+  .manager-note{flex:1 1 100%;text-align:center;order:98}
+
+  /* CARD-MODE TABLE */
+  .table-wrap{border:none;background:transparent;box-shadow:none;max-height:none;overflow:visible}
+  table{min-width:0;width:100%}
+  thead{display:none}
+  tbody{display:block}
+  tbody tr{display:block;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);margin-bottom:12px;padding:14px 14px 10px}
+  tbody tr.row-due{border-left:3px solid var(--accent)}
+  tbody tr.row-due td:first-child{box-shadow:none}
+  tbody tr:hover{background:var(--surface)}
+  tbody td{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:none;font-size:13px;max-width:none!important;white-space:normal!important;overflow:visible!important}
+  tbody td::before{content:attr(data-label);font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+  tbody td.cell-co{display:block;padding:0 0 8px;margin-bottom:6px;border-bottom:1px solid var(--border)}
+  tbody td.cell-co::before{display:none}
+  tbody td.cell-co .co-name{font-size:15px}
+  tbody td.cell-act{padding-top:10px;margin-top:6px;border-top:1px solid var(--border)}
+  tbody td.cell-act::before{display:none}
+  .row-acts{opacity:1;width:100%;gap:8px}
+  .row-acts button{flex:1;padding:9px;font-size:13px}
+
+  /* Modal fullscreen single column */
+  .overlay{padding:0;align-items:stretch}
+  .modal{width:100%;max-width:100%;border-radius:0;min-height:100vh;display:flex;flex-direction:column}
+  .mb{flex:1;max-height:none}
+  .fg{grid-template-columns:1fr}
+  .mh{position:sticky;top:0;z-index:5}
+  .mf{position:sticky;bottom:0}
+  .mf button{flex:1}
+
+  .dash-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .dash-card{padding:14px}
+  .dash-card-val{font-size:24px}
+  .kpi-cards{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi-card{padding:14px}
+  .kpi-card-val{font-size:20px}
+  .chart-wrap{height:200px}
+
+  .kpi-table-wrap{position:relative;-webkit-overflow-scrolling:touch}
+  .kpi-table-wrap::after{content:'\2190 cu\1ED9n ngang \2192';display:block;text-align:center;font-size:10.5px;color:var(--hint);padding:6px;background:#FAF9F6}
+  .quarter-tabs{gap:5px}
+  .quarter-tab{padding:6px 14px;font-size:12px}
+
+  .undo-bar{left:12px;right:12px;transform:none;bottom:12px;justify-content:space-between}
+  .toast{left:12px;right:12px;bottom:12px;text-align:center}
+}
+
+@media (max-width:380px){
+  .stats-bar{grid-template-columns:1fr 1fr}
+  .stat-num{font-size:20px}
+  .dash-grid,.kpi-cards{grid-template-columns:1fr}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -786,20 +866,20 @@ function renderTable(){
     const isDue=nd&&nd<=today&&sta!=='Success'&&sta!=='Fail';
     const nxaCell=nxa?`<span style="font-size:12px;${isDue?'color:#C0392B;font-weight:700':'color:var(--muted)'}">${isDue?'⚠ ':''}${esc(nxa)}</span>`:'<span style="color:var(--hint)">—</span>';
     return `<tr class="${isDue?'row-due':''}">
-      <td><div class="co-name">${esc(co)}</div>${typStr?`<div class="co-meta">${typStr}</div>`:''}${ctc?`<div class="co-meta">👤 ${esc(ctc)}</div>`:''}</td>
-      <td><span class="badge bp${priN}">${esc(pri)||'—'}</span></td>
-      <td style="font-size:12px;color:var(--muted)">${esc(inc)}</td>
-      <td><span class="badge bs-${esc(String(sta||'').toLowerCase())}">${esc(sta)||'—'}</span></td>
-      <td><span class="badge ${srcBadge(src)}">${esc(src)||'—'}</span></td>
-      <td style="font-size:12px;color:var(--muted)">${sizeStr}</td>
-      <td style="font-size:12px;font-weight:500">${budStr}</td>
-      <td style="font-size:12px">${locStr}</td>
-      <td style="font-size:12px;color:var(--muted)">${expStr}</td>
-      <td><span class="badge bp3">${natStr}</span></td>
-      <td><span class="badge ${prcBadge(prc)}">${esc(prc)||'—'}</span></td>
-      <td>${nxaCell}</td>
-      <td style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)" title="${esc(note)}">${note?esc(note.substring(0,40))+(note.length>40?'…':''):''}</td>
-      <td><div class="row-acts"><button class="btn-e" onclick="openEdit(${dataIdx})">Edit</button><button class="btn-d" onclick="delRecord(${dataIdx})">Delete</button></div></td>
+      <td class="cell-co"><div class="co-name">${esc(co)}</div>${typStr?`<div class="co-meta">${typStr}</div>`:''}${ctc?`<div class="co-meta">👤 ${esc(ctc)}</div>`:''}</td>
+      <td data-label="Priority"><span class="badge bp${priN}">${esc(pri)||'—'}</span></td>
+      <td data-label="Incharge" style="font-size:12px;color:var(--muted)">${esc(inc)}</td>
+      <td data-label="Status"><span class="badge bs-${esc(String(sta||'').toLowerCase())}">${esc(sta)||'—'}</span></td>
+      <td data-label="Source"><span class="badge ${srcBadge(src)}">${esc(src)||'—'}</span></td>
+      <td data-label="Size (m²)" style="font-size:12px;color:var(--muted)">${sizeStr}</td>
+      <td data-label="Budget" style="font-size:12px;font-weight:500">${budStr}</td>
+      <td data-label="Location" style="font-size:12px">${locStr}</td>
+      <td data-label="Expired" style="font-size:12px;color:var(--muted)">${expStr}</td>
+      <td data-label="National"><span class="badge bp3">${natStr}</span></td>
+      <td data-label="Process"><span class="badge ${prcBadge(prc)}">${esc(prc)||'—'}</span></td>
+      <td data-label="Next Action">${nxaCell}</td>
+      <td data-label="Note" style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)" title="${esc(note)}">${note?esc(note.substring(0,40))+(note.length>40?'…':''):''}</td>
+      <td class="cell-act"><div class="row-acts"><button class="btn-e" onclick="openEdit(${dataIdx})">Edit</button><button class="btn-d" onclick="delRecord(${dataIdx})">Delete</button></div></td>
     </tr>`;
   }).join('');
 }
