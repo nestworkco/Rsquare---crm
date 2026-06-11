@@ -660,6 +660,18 @@ const INCHARGE_FULL = {
   'Loi':'Lợi Nguyễn Thị Giai','Lợi':'Lợi Nguyễn Thị Giai',
 };
 const resolveIncharge = name => INCHARGE_FULL[String(name).trim()] || String(name).trim();
+
+// Global short-name map for KPI table & Analytics chart
+const SHORT_NAME_MAP = {
+  'Huy Phan Quốc':       'Huy',
+  'Huy Nguyễn An':       'An Huy',
+  'Trúc La Nguyên':      'Trúc',
+  'Tuấn Nguyễn Công':    'Tuấn',
+  'Tuyền Phạm Kim':      'Tuyền',
+  'Lợi Nguyễn Thị Giai': 'Lợi',
+  'ChungMyeong Chae':    'ChungMyeong',
+};
+const shortN = fullName => SHORT_NAME_MAP[String(fullName).trim()] || String(fullName).split(' ')[0];
 function buildColMap(headers){
   if(!headers||!headers.length) return;
   const find=(keys)=>{for(const k of keys){const i=headers.findIndex(h=>h.toLowerCase().includes(k.toLowerCase()));if(i>=0)return i;}return -1;};
@@ -1143,8 +1155,8 @@ function renderDashboard() {
   const incNames = Object.keys(inchargeMap);
   if (incNames.length) {
     const ctx4 = document.getElementById('chartIncharge').getContext('2d');
-    // Shorten names for display
-    const shortNames = incNames.map(n => n.split(' ').slice(-1)[0]);
+    // Shorten names using global SHORT_NAME_MAP
+    const shortNames = incNames.map(n => shortN(n));
     chartInstances.incharge = new Chart(ctx4, {
       type: 'bar',
       data: {
@@ -1247,17 +1259,7 @@ function renderKPI() {
     'lointg@rsquare.vn':  'Lợi Nguyễn Thị Giai',
     'huyna@rsquare.vn':   'Huy Nguyễn An',
   };
-  // Short display names for KPI table & Analytics chart
-  const SHORT_NAME_MAP = {
-    'Huy Phan Quốc':       'Huy',
-    'Huy Nguyễn An':       'An Huy',
-    'Trúc La Nguyên':      'Trúc',
-    'Tuấn Nguyễn Công':    'Tuấn',
-    'Tuyền Phạm Kim':      'Tuyền',
-    'Lợi Nguyễn Thị Giai': 'Lợi',
-    'ChungMyeong Chae':    'ChungMyeong',
-  };
-  const shortN = fullName => SHORT_NAME_MAP[String(fullName).trim()] || String(fullName).split(' ')[0];
+  // shortN is now global — defined at module level
   const myKPIName = KPI_NAME_MAP[currentUser.email] || currentUser.name;
   const statsData = isManagerView
     ? qData
