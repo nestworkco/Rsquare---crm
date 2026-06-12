@@ -820,8 +820,17 @@ async function loadIncharge(){
       if(!CANONICAL_INCHARGE.includes(full)) CANONICAL_INCHARGE.push(full);
     });
   }catch(e){}
-  // Populate the multi-select incharge panel
+  // Populate filter MSD panel
   syncInchargeFilter();
+  // Populate modal m-inc dropdown
+  populateIncModal();
+}
+
+function populateIncModal(){
+  const sel = document.getElementById('m-inc');
+  if(!sel) return;
+  const names = CANONICAL_INCHARGE.slice().sort();
+  sel.innerHTML = names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
 }
 
 function syncMonthFilter(){
