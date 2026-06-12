@@ -123,13 +123,55 @@ button{font-family:var(--font)}
 .search-wrap .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:12px;opacity:.5;pointer-events:none}
 .search-wrap input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border-md);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text);font-family:var(--font);transition:border-color .15s,box-shadow .15s}
 .search-wrap input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-.filter-bar select{padding:8px 28px 8px 11px;border:1px solid var(--border-md);border-radius:var(--radius);font-size:12.5px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236E6C68' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;color:var(--text);font-family:var(--font);cursor:pointer;appearance:none;-webkit-appearance:none;transition:border-color .15s}
-.filter-bar select:hover{border-color:var(--hint)}
-.filter-bar select:focus{outline:none;border-color:var(--accent)}
+/* ── MULTI-SELECT DROPDOWN ── */
+.msd{position:relative;display:inline-block}
+.msd-btn{padding:8px 28px 8px 11px;border:1px solid var(--border-md);border-radius:var(--radius);font-size:12.5px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236E6C68' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;color:var(--text);font-family:var(--font);cursor:pointer;white-space:nowrap;user-select:none;transition:border-color .15s}
+.msd-btn:hover{border-color:var(--hint)}
+.msd-btn.active{border-color:var(--accent);color:var(--accent);background-color:var(--accent-soft)}
+.msd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:170px;background:var(--surface);border:1px solid var(--border-md);border-radius:var(--radius);box-shadow:0 8px 24px rgba(28,27,26,.12);z-index:200;padding:6px 0}
+.msd-panel.open{display:block}
+.msd-item{display:flex;align-items:center;gap:9px;padding:7px 14px;font-size:13px;cursor:pointer;transition:background .1s}
+.msd-item:hover{background:var(--bg)}
+.msd-item input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.msd-item label{cursor:pointer;flex:1}
+.msd-divider{height:1px;background:var(--border);margin:4px 0}
+.msd-clear{padding:6px 14px;font-size:11.5px;color:var(--muted);cursor:pointer;display:block;text-align:center}
+.msd-clear:hover{color:var(--accent)}
+/* ── DATE RANGE FILTER ── */
+.date-range-wrap{display:flex;align-items:center;gap:6px;border:1px solid var(--border-md);border-radius:var(--radius);padding:5px 10px;background:var(--surface);transition:border-color .15s}
+.date-range-wrap:focus-within{border-color:var(--accent)}
+.date-range-wrap span{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.date-range-wrap input[type=date]{border:none;background:transparent;font-size:12.5px;color:var(--text);font-family:var(--font);cursor:pointer;outline:none;width:120px}
+.date-range-wrap .dr-sep{color:var(--hint);font-size:11px}
+.date-range-wrap.active{border-color:var(--accent)}
+/* ── OTHER ── */
 .filter-clear{font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;padding:6px 10px;border-radius:6px;transition:all .15s}
 .filter-clear:hover{color:var(--accent);background:var(--accent-soft)}
 .count-lbl{font-size:12px;color:var(--muted);white-space:nowrap;margin-left:auto;font-variant-numeric:tabular-nums}
 .manager-note{font-size:11px;color:var(--amber);background:var(--amber-soft);border:1px solid #EFDFBC;border-radius:6px;padding:4px 10px;white-space:nowrap;font-weight:500}
+/* ── ADD STAFF MODAL ── */
+.staff-modal-overlay{display:none;position:fixed;inset:0;background:rgba(28,27,26,.45);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.staff-modal-overlay.open{display:flex}
+.staff-modal{background:var(--surface);border-radius:var(--radius-lg);width:520px;max-width:95vw;box-shadow:0 16px 48px rgba(28,27,26,.18);overflow:hidden;animation:modalIn .18s ease}
+.staff-modal .mh{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border)}
+.staff-modal .mt{font-family:var(--font-display);font-size:16px;font-weight:600}
+.staff-modal .mc{border:none;background:none;font-size:22px;cursor:pointer;color:var(--hint);padding:4px 8px;border-radius:6px}
+.staff-modal .mc:hover{color:var(--text);background:var(--bg)}
+.staff-modal-body{padding:24px}
+.staff-field{margin-bottom:16px}
+.staff-field label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.staff-field input{width:100%;padding:9px 12px;border:1px solid var(--border-md);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text);font-family:var(--font);transition:border-color .15s}
+.staff-field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.staff-hint{font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;line-height:1.7;margin-bottom:16px}
+.staff-hint code{background:var(--border);padding:1px 5px;border-radius:4px;font-size:11.5px}
+.staff-actions{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid var(--border);background:#FAF9F6}
+.btn-staff-save{border:none;background:var(--accent);color:#fff;border-radius:var(--radius);padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-staff-save:hover{background:var(--accent-hover)}
+.btn-staff-save:disabled{opacity:.55;cursor:not-allowed}
+.staff-result{margin-top:14px;padding:12px 14px;border-radius:var(--radius);font-size:12.5px;display:none}
+.staff-result.ok{display:block;background:var(--green-soft);color:var(--green);border:1px solid #B8DEC9}
+.staff-result.err{display:block;background:var(--accent-soft);color:var(--accent);border:1px solid #F5C4B3}
+.staff-script-box{background:#1C1B1A;color:#E8E5DF;border-radius:var(--radius);padding:12px 14px;font-size:11.5px;font-family:monospace;line-height:1.8;margin-top:14px;white-space:pre-wrap;word-break:break-all;display:none}
 
 /* ════════ TABLE ════════ */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:auto;box-shadow:var(--shadow-sm);max-height:calc(100vh - 320px)}
@@ -413,6 +455,7 @@ tbody tr:hover .row-acts{opacity:1}
         <span class="role-tag" id="roleTag"></span>
       </div>
       <button class="btn-add hidden" id="btnAdd" onclick="openModal()">+ Add client</button>
+    <button class="btn-add hidden" id="btnAddStaff" style="background:var(--slate)" onclick="openAddStaff()">👤 Add staff</button>
       <button class="btn-logout" onclick="doLogout()">Sign out</button>
     </div>
   </div>
@@ -440,34 +483,86 @@ tbody tr:hover .row-acts{opacity:1}
       <span class="si">🔍</span>
       <input type="text" id="search" placeholder="Search company, building, nationality..." oninput="applyFilters()">
     </div>
-    <select id="f-status" onchange="applyFilters()">
-      <option value="">Status</option>
-      <option>Success</option><option>Deal</option><option>Fail</option><option>Following</option>
-    </select>
-    <select id="f-priority" onchange="applyFilters()">
-      <option value="">Priority</option>
-      <option>P0</option><option>P1</option><option>P2</option><option>P3</option>
-    </select>
-    <select id="f-incharge" onchange="applyFilters()">
-      <option value="">Incharge</option>
-    </select>
-    <select id="f-source" onchange="applyFilters()">
-      <option value="">Source</option>
-      <option>CALL SALES</option><option>WEBSITE</option><option>SALE VISIT</option><option>SNS</option><option>INTRO</option><option>DBR VISIT</option><option>EDM FLYER</option>
-    </select>
-    <select id="f-process" onchange="applyFilters()">
-      <option value="">Process</option>
-      <option>Send Flyer</option><option>Meeting</option><option>Negotiate</option><option>Go DD</option>
-    </select>
-    <select id="f-month" onchange="applyFilters()" title="Filter by Start Month">
-      <option value="">All months</option>
-    </select>
-    <select id="f-followup" onchange="applyFilters()" title="Filter by Next Action date">
-      <option value="">Follow-up date</option>
+
+    <!-- Status multi-select -->
+    <div class="msd" id="msd-status">
+      <div class="msd-btn" id="msd-status-btn" onclick="toggleMsd('status')">Status</div>
+      <div class="msd-panel" id="msd-status-panel">
+        <label class="msd-item"><input type="checkbox" value="Following" onchange="msdChange('status')"><label>Following</label></label>
+        <label class="msd-item"><input type="checkbox" value="Deal" onchange="msdChange('status')"><label>Deal</label></label>
+        <label class="msd-item"><input type="checkbox" value="Success" onchange="msdChange('status')"><label>Success</label></label>
+        <label class="msd-item"><input type="checkbox" value="Fail" onchange="msdChange('status')"><label>Fail</label></label>
+        <div class="msd-divider"></div>
+        <span class="msd-clear" onclick="clearMsd('status')">Clear</span>
+      </div>
+    </div>
+
+    <!-- Priority multi-select -->
+    <div class="msd" id="msd-priority">
+      <div class="msd-btn" id="msd-priority-btn" onclick="toggleMsd('priority')">Priority</div>
+      <div class="msd-panel" id="msd-priority-panel">
+        <label class="msd-item"><input type="checkbox" value="P0" onchange="msdChange('priority')"><label>P0</label></label>
+        <label class="msd-item"><input type="checkbox" value="P1" onchange="msdChange('priority')"><label>P1</label></label>
+        <label class="msd-item"><input type="checkbox" value="P2" onchange="msdChange('priority')"><label>P2</label></label>
+        <label class="msd-item"><input type="checkbox" value="P3" onchange="msdChange('priority')"><label>P3</label></label>
+        <div class="msd-divider"></div>
+        <span class="msd-clear" onclick="clearMsd('priority')">Clear</span>
+      </div>
+    </div>
+
+    <!-- Incharge multi-select -->
+    <div class="msd" id="msd-incharge">
+      <div class="msd-btn" id="msd-incharge-btn" onclick="toggleMsd('incharge')">Incharge</div>
+      <div class="msd-panel" id="msd-incharge-panel">
+        <!-- populated dynamically by syncInchargeFilter() -->
+      </div>
+    </div>
+
+    <!-- Source multi-select -->
+    <div class="msd" id="msd-source">
+      <div class="msd-btn" id="msd-source-btn" onclick="toggleMsd('source')">Source</div>
+      <div class="msd-panel" id="msd-source-panel">
+        <label class="msd-item"><input type="checkbox" value="CALL SALES" onchange="msdChange('source')"><label>CALL SALES</label></label>
+        <label class="msd-item"><input type="checkbox" value="WEBSITE" onchange="msdChange('source')"><label>WEBSITE</label></label>
+        <label class="msd-item"><input type="checkbox" value="SALE VISIT" onchange="msdChange('source')"><label>SALE VISIT</label></label>
+        <label class="msd-item"><input type="checkbox" value="SNS" onchange="msdChange('source')"><label>SNS</label></label>
+        <label class="msd-item"><input type="checkbox" value="INTRO" onchange="msdChange('source')"><label>INTRO</label></label>
+        <label class="msd-item"><input type="checkbox" value="DBR VISIT" onchange="msdChange('source')"><label>DBR VISIT</label></label>
+        <label class="msd-item"><input type="checkbox" value="EDM FLYER" onchange="msdChange('source')"><label>EDM FLYER</label></label>
+        <div class="msd-divider"></div>
+        <span class="msd-clear" onclick="clearMsd('source')">Clear</span>
+      </div>
+    </div>
+
+    <!-- Process multi-select -->
+    <div class="msd" id="msd-process">
+      <div class="msd-btn" id="msd-process-btn" onclick="toggleMsd('process')">Process</div>
+      <div class="msd-panel" id="msd-process-panel">
+        <label class="msd-item"><input type="checkbox" value="Send Flyer" onchange="msdChange('process')"><label>Send Flyer</label></label>
+        <label class="msd-item"><input type="checkbox" value="Meeting" onchange="msdChange('process')"><label>Meeting</label></label>
+        <label class="msd-item"><input type="checkbox" value="Negotiate" onchange="msdChange('process')"><label>Negotiate</label></label>
+        <label class="msd-item"><input type="checkbox" value="Go DD" onchange="msdChange('process')"><label>Go DD</label></label>
+        <div class="msd-divider"></div>
+        <span class="msd-clear" onclick="clearMsd('process')">Clear</span>
+      </div>
+    </div>
+
+    <!-- Date range (replaces month dropdown) -->
+    <div class="date-range-wrap" id="dateRangeWrap">
+      <span>Start Day</span>
+      <input type="date" id="f-date-min" onchange="applyFilters();updateDateRangeStyle()" title="From date">
+      <span class="dr-sep">→</span>
+      <input type="date" id="f-date-max" onchange="applyFilters();updateDateRangeStyle()" title="To date">
+    </div>
+
+    <!-- Follow-up select (kept as single, only 3 options) -->
+    <select id="f-followup" onchange="applyFilters()" style="padding:8px 28px 8px 11px;border:1px solid var(--border-md);border-radius:var(--radius);font-size:12.5px;background:var(--surface);color:var(--text);font-family:var(--font);cursor:pointer;appearance:none;-webkit-appearance:none" title="Filter by Next Action date">
+      <option value="">Follow-up</option>
       <option value="due">Due / Overdue</option>
       <option value="week">Next 7 days</option>
     </select>
-    <span class="filter-clear" onclick="clearFilters()">✕ Clear filters</span>
+
+    <span class="filter-clear" onclick="clearFilters()">✕ Clear</span>
     <span class="count-lbl" id="countLbl"></span>
     <span class="manager-note hidden" id="managerNote">Full team view — edits go to your own sheet</span>
   </div>
@@ -562,6 +657,43 @@ tbody tr:hover .row-acts{opacity:1}
 <div class="undo-bar" id="undoBar"><span id="undoMsg"></span><button class="undo-btn" onclick="undoLastKPI()">↩ Undo</button></div>
 <div class="toast" id="toast"></div>
 
+<div class="staff-modal-overlay" id="staffOverlay">
+  <div class="staff-modal">
+    <div class="mh">
+      <div class="mt">Add new staff member</div>
+      <button class="mc" onclick="closeAddStaff()">×</button>
+    </div>
+    <div class="staff-modal-body">
+      <div class="staff-hint">
+        <strong>Before adding:</strong><br>
+        1. Create a new Google Sheet for this staff member in Drive<br>
+        2. Copy the structure from an existing member's sheet (header row A→Z)<br>
+        3. Copy the <strong>Sheet ID</strong> from the URL:<br>
+        <code>docs.google.com/spreadsheets/d/<strong>[SHEET ID]</strong>/edit</code><br>
+        4. The tab name inside that sheet must be <code>Customer List</code>
+      </div>
+      <div class="staff-field">
+        <label>Full name *</label>
+        <input type="text" id="ns-name" placeholder="e.g. Minh Nguyễn Văn">
+      </div>
+      <div class="staff-field">
+        <label>Work email * (@rsquare.vn)</label>
+        <input type="text" id="ns-email" placeholder="e.g. minhvn@rsquare.vn">
+      </div>
+      <div class="staff-field">
+        <label>Google Sheet ID *</label>
+        <input type="text" id="ns-ssid" placeholder="1aBcDeFgHiJkLmNoPqRsTuVwXyZ...">
+      </div>
+      <div class="staff-result" id="staffResult"></div>
+      <div class="staff-script-box" id="staffScriptBox"></div>
+    </div>
+    <div class="staff-actions">
+      <button class="btn-cm" onclick="closeAddStaff()">Cancel</button>
+      <button class="btn-staff-save" id="btnStaffSave" onclick="saveNewStaff()">Add staff member</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxwG6kr6J6KOd4TfKrgNZHNbxunFrasATcetmPmZhv4Vd2-YipLCT7u40oO-29DTwwI-g/exec';
 let currentUser=null,allData=[],filtered=[],editingDataIdx=null,editingId=null,sortCol=-1,sortDir=1;
@@ -606,8 +738,13 @@ function showApp(){
   rt.textContent=currentUser.role==='manager'?'Manager':'Staff';
   rt.className='role-tag '+(currentUser.role==='manager'?'role-manager':'role-staff');
   document.getElementById('btnAdd').classList.remove('hidden');
-  if(currentUser.role==='manager') document.getElementById('managerNote').classList.remove('hidden');
-  else document.getElementById('managerNote').classList.add('hidden');
+  if(currentUser.role==='manager'){
+    document.getElementById('managerNote').classList.remove('hidden');
+    document.getElementById('btnAddStaff').classList.remove('hidden');
+  } else {
+    document.getElementById('managerNote').classList.add('hidden');
+    document.getElementById('btnAddStaff').classList.add('hidden');
+  }
   loadIncharge();loadData();
 }
 
@@ -623,7 +760,7 @@ async function loadData(forceRefresh=false){
         const { data, headers, ts } = JSON.parse(cached);
         if (Date.now() - ts < CACHE_TTL && data.length) {
           allData = data;
-          if (headers) buildColMap(headers);
+          if (headers) buildColMap(headers); else buildColMap([]);
           syncInchargeFromData(); syncMonthFilter(); applyFilters(); updateStats();
           setSyncStatus('ok', 'Synced · cached');
           // Refresh in background silently
@@ -699,27 +836,19 @@ async function loadIncharge(){
 }
 
 function syncMonthFilter(){
-  const months=new Map();
-  allData.forEach(r=>{
-    const sd=fmtDate(v(r,'sd'));
-    if(sd&&sd.includes('/')){
-      const parts=sd.split('/');
-      if(parts.length>=3){
-        const key=parts[1]+'/'+parts[2]; // mm/yyyy
-        const label='Month '+parts[1]+'/'+parts[2];
-        months.set(key,label);
-      }
-    }
-  });
-  const sel=document.getElementById('f-month'),prev=sel.value;
-  // Sort by year/month
-  const sorted=[...months.entries()].sort((a,b)=>{
-    const [ma,ya]=a[0].split('/'); const [mb,yb]=b[0].split('/');
-    return Number(ya)*12+Number(ma) - (Number(yb)*12+Number(mb));
-  });
-  sel.innerHTML='<option value="">All months</option>';
-  sorted.forEach(([k,l])=>{ sel.innerHTML+=`<option value="${k}">${l}</option>`; });
-  if(prev) sel.value=prev;
+  // replaced by syncInchargeFilter — kept for API compatibility
+  syncInchargeFilter();
+}
+function syncInchargeFilter(){
+  const panel=document.getElementById('msd-incharge-panel');
+  if(!panel) return;
+  const names=CANONICAL_INCHARGE.slice();
+  // also add any names found in data not in canonical list
+  allData.forEach(r=>{const n=String(v(r,'inc')).trim();if(n&&!names.includes(n))names.push(n);});
+  names.sort();
+  const checked=getMsd('incharge');
+  panel.innerHTML=names.map(n=>`<label class="msd-item"><input type="checkbox" value="${esc(n)}" onchange="msdChange('incharge')"${checked.includes(n)?' checked':''}><label>${esc(n)}</label></label>`).join('')
+    +`<div class="msd-divider"></div><span class="msd-clear" onclick="clearMsd('incharge')">Clear</span>`;
 }
 
 function syncInchargeFromData(){
@@ -811,32 +940,82 @@ function fmtDate(val){
   return String(val);
 }
 
+// ── Multi-select filter helpers ──
+function getMsd(key){
+  const checks=[...document.querySelectorAll(`#msd-${key}-panel input[type=checkbox]`)];
+  return checks.filter(c=>c.checked).map(c=>c.value);
+}
+function toggleMsd(key){
+  const panel=document.getElementById(`msd-${key}-panel`);
+  const btn=document.getElementById(`msd-${key}-btn`);
+  const isOpen=panel.classList.contains('open');
+  // Close all panels first
+  document.querySelectorAll('.msd-panel').forEach(p=>p.classList.remove('open'));
+  if(!isOpen){panel.classList.add('open');btn.style.outline='2px solid var(--accent)';}
+  else btn.style.outline='';
+}
+function msdChange(key){
+  const vals=getMsd(key);
+  const btn=document.getElementById(`msd-${key}-btn`);
+  const labels={status:'Status',priority:'Priority',incharge:'Incharge',source:'Source',process:'Process'};
+  if(vals.length===0){btn.textContent=labels[key];btn.classList.remove('active');}
+  else{btn.textContent=vals.length===1?vals[0]:`${labels[key]} (${vals.length})`;btn.classList.add('active');}
+  applyFilters();
+}
+function clearMsd(key){
+  document.querySelectorAll(`#msd-${key}-panel input[type=checkbox]`).forEach(c=>c.checked=false);
+  msdChange(key);
+}
+function updateDateRangeStyle(){
+  const mn=document.getElementById('f-date-min').value;
+  const mx=document.getElementById('f-date-max').value;
+  const wrap=document.getElementById('dateRangeWrap');
+  wrap.classList.toggle('active',!!(mn||mx));
+}
+// Close MSD panels on outside click
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.msd')){
+    document.querySelectorAll('.msd-panel').forEach(p=>p.classList.remove('open'));
+    document.querySelectorAll('.msd-btn').forEach(b=>b.style.outline='');
+  }
+});
+
 function applyFilters(){
   const q=document.getElementById('search').value.toLowerCase();
-  const fs=document.getElementById('f-status').value,fp=document.getElementById('f-priority').value;
-  const fi=document.getElementById('f-incharge').value,fso=document.getElementById('f-source').value;
-  const fpr=document.getElementById('f-process').value;
-  const fmo=document.getElementById('f-month').value;
   const ffu=document.getElementById('f-followup').value;
+  // Multi-select values (empty array = no filter)
+  const fsArr=getMsd('status'),fpArr=getMsd('priority');
+  const fiArr=getMsd('incharge'),fsoArr=getMsd('source'),fprArr=getMsd('process');
+  // Date range
+  const dMin=document.getElementById('f-date-min').value; // yyyy-mm-dd
+  const dMax=document.getElementById('f-date-max').value;
+
   filtered=allData.filter(r=>{
-    const co=String(v(r,'co')).toLowerCase(),loc=String(v(r,'loc')).toLowerCase(),nat=String(v(r,'nat')).toLowerCase(),ctc=String(v(r,'ctc')).toLowerCase();
+    const co=String(v(r,'co')).toLowerCase(),loc=String(v(r,'loc')).toLowerCase();
+    const nat=String(v(r,'nat')).toLowerCase(),ctc=String(v(r,'ctc')).toLowerCase();
+    // Follow-up filter
     if(ffu==='due'&&!isFollowupDue(r))return false;
     if(ffu==='week'){
       const nd=parseDMY(v(r,'nxa')); if(!nd)return false;
       const t0=new Date();t0.setHours(0,0,0,0); const t7=new Date(t0.getTime()+7*864e5);
       if(nd<t0||nd>t7)return false;
     }
+    // Text search
     if(q&&!co.includes(q)&&!loc.includes(q)&&!nat.includes(q)&&!ctc.includes(q)) return false;
-    if(fs&&String(v(r,'sta')).trim()!==fs.trim()) return false;
-    if(fmo){
-      const sd=fmtDate(v(r,'sd'));
-      const m=sd&&sd.includes('/')?sd.split('/').slice(1).join('/'):null; // mm/yyyy
-      if(!m||m!==fmo) return false;
+    // Multi-select OR logic
+    if(fsArr.length&&!fsArr.includes(String(v(r,'sta')).trim())) return false;
+    if(fpArr.length&&!fpArr.includes(String(v(r,'pri')).trim())) return false;
+    if(fiArr.length&&!fiArr.includes(String(v(r,'inc')).trim())) return false;
+    if(fsoArr.length&&!fsoArr.includes(String(v(r,'src')).trim())) return false;
+    if(fprArr.length&&!fprArr.includes(String(v(r,'prc')).trim())) return false;
+    // Date range filter (Start Day)
+    if(dMin||dMax){
+      const sdRaw=v(r,'sd'); const sdFmt=fmtDate(sdRaw);
+      const sdDate=parseDMY(sdFmt);
+      if(!sdDate) return false;
+      if(dMin&&sdDate<new Date(dMin)) return false;
+      if(dMax){const dMaxEnd=new Date(dMax);dMaxEnd.setHours(23,59,59,999);if(sdDate>dMaxEnd)return false;}
     }
-    if(fp&&String(v(r,'pri')).trim()!==fp.trim()) return false;
-    if(fi&&String(v(r,'inc')).trim()!==fi.trim()) return false;
-    if(fso&&String(v(r,'src')).trim()!==fso.trim()) return false;
-    if(fpr&&String(v(r,'prc')).trim()!==fpr.trim()) return false;
     return true;
   });
   if(sortCol>=0) filtered.sort((a,b)=>String(a[sortCol]||'').localeCompare(String(b[sortCol]||''))*sortDir);
@@ -906,18 +1085,23 @@ function prcBadge(p){
 }
 
 function updateStats(){
-  document.getElementById('st-total').textContent=allData.length;
-  document.getElementById('st-deal').textContent=allData.filter(r=>v(r,'sta')==='Deal').length;
-  document.getElementById('st-success').textContent=allData.filter(r=>v(r,'sta')==='Success').length;
-  document.getElementById('st-fail').textContent=allData.filter(r=>v(r,'sta')==='Fail').length;
-  document.getElementById('st-p0').textContent=allData.filter(r=>v(r,'pri')==='P0').length;
-  document.getElementById('st-due').textContent=allData.filter(isFollowupDue).length;
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  set('st-total', allData.length);
+  set('st-deal',    allData.filter(r=>String(v(r,'sta')).trim()==='Deal').length);
+  set('st-success', allData.filter(r=>String(v(r,'sta')).trim()==='Success').length);
+  set('st-fail',    allData.filter(r=>String(v(r,'sta')).trim()==='Fail').length);
+  set('st-p0',      allData.filter(r=>String(v(r,'pri')).trim()==='P0').length);
+  set('st-due',     allData.filter(isFollowupDue).length);
 }
 
 function sortBy(col){sortDir=(sortCol===col)?sortDir*-1:1;sortCol=col;applyFilters();}
 function clearFilters(){
   document.getElementById('search').value='';
-  ['f-status','f-priority','f-incharge','f-source','f-process','f-month','f-followup'].forEach(id=>document.getElementById(id).value='');
+  ['status','priority','incharge','source','process'].forEach(key=>clearMsd(key));
+  document.getElementById('f-followup').value='';
+  document.getElementById('f-date-min').value='';
+  document.getElementById('f-date-max').value='';
+  updateDateRangeStyle();
   applyFilters();
 }
 function quickDueFilter(){
@@ -1002,6 +1186,62 @@ function openEdit(dataIdx){
   document.getElementById('modal').classList.add('open');
 }
 function closeModal(){document.getElementById('modal').classList.remove('open');editingDataIdx=null;editingId=null;}
+
+// ── Add Staff ──
+function openAddStaff(){
+  document.getElementById('ns-name').value='';
+  document.getElementById('ns-email').value='';
+  document.getElementById('ns-ssid').value='';
+  document.getElementById('staffResult').style.display='none';
+  document.getElementById('staffScriptBox').style.display='none';
+  document.getElementById('btnStaffSave').disabled=false;
+  document.getElementById('btnStaffSave').textContent='Add staff member';
+  document.getElementById('staffOverlay').classList.add('open');
+}
+function closeAddStaff(){document.getElementById('staffOverlay').classList.remove('open');}
+
+async function saveNewStaff(){
+  const name=document.getElementById('ns-name').value.trim();
+  const email=document.getElementById('ns-email').value.trim().toLowerCase();
+  const ssid=document.getElementById('ns-ssid').value.trim();
+  const res=document.getElementById('staffResult');
+  const box=document.getElementById('staffScriptBox');
+  if(!name||!email||!ssid){
+    res.className='staff-result err';res.textContent='Please fill in all fields.';res.style.display='block';return;
+  }
+  if(!email.endsWith('@rsquare.vn')){
+    res.className='staff-result err';res.textContent='Email must end with @rsquare.vn';res.style.display='block';return;
+  }
+  const btn=document.getElementById('btnStaffSave');
+  btn.disabled=true;btn.textContent='Adding…';
+  try{
+    // Call Apps Script to register new staff
+    const payload={action:'addStaff',email:currentUser.email,newEmail:email,newName:name,newSsid:ssid};
+    const r=await fetch(API,{method:'POST',body:JSON.stringify(payload)});
+    const json=await r.json();
+    if(json.success){
+      res.className='staff-result ok';
+      res.innerHTML=`✓ <strong>${esc(name)}</strong> added successfully! They can now log in with <strong>${esc(email)}</strong>.<br><br>Ask them to open the app and sign in — their data will be isolated to their own sheet.`;
+      res.style.display='block';
+      box.style.display='none';
+      btn.textContent='Done';
+      // Update local CANONICAL_INCHARGE if not already there
+      if(!CANONICAL_INCHARGE.includes(name)) CANONICAL_INCHARGE.push(name);
+      syncInchargeFilter();
+    } else {
+      throw new Error(json.error||'Server error');
+    }
+  }catch(e){
+    // Fallback: show manual Apps Script snippet
+    res.className='staff-result err';
+    res.innerHTML='Could not update automatically (Apps Script needs redeployment).<br><strong>Copy the snippet below and add it to the USERS object in your Apps Script:</strong>';
+    res.style.display='block';
+    box.textContent=`  '${email}': { name: '${name}', role: 'staff', ssid: '${ssid}', sheet: 'Customer List' },`;
+    box.style.display='block';
+    btn.textContent='Add staff member';
+    btn.disabled=false;
+  }
+}
 
 async function saveRecord(){
   const co=document.getElementById('m-co').value.trim();
