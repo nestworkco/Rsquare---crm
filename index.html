@@ -147,6 +147,8 @@ button{font-family:var(--font)}
 /* ── OTHER ── */
 .filter-clear{font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;padding:6px 10px;border-radius:6px;transition:all .15s}
 .filter-clear:hover{color:var(--accent);background:var(--accent-soft)}
+.btn-export{font-size:12px;color:var(--navy);cursor:pointer;white-space:nowrap;padding:6px 12px;border-radius:6px;border:1px solid var(--navy);background:var(--navy-soft);font-family:var(--font);font-weight:500;transition:all .15s;margin-left:auto}
+.btn-export:hover{background:var(--navy);color:#fff}
 .count-lbl{font-size:12px;color:var(--muted);white-space:nowrap;margin-left:auto;font-variant-numeric:tabular-nums}
 .manager-note{font-size:11px;color:var(--amber);background:var(--amber-soft);border:1px solid #EFDFBC;border-radius:6px;padding:4px 10px;white-space:nowrap;font-weight:500}
 /* ── ADD STAFF MODAL ── */
@@ -175,16 +177,33 @@ button{font-family:var(--font)}
 
 /* ════════ TABLE ════════ */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:auto;box-shadow:var(--shadow-sm);max-height:calc(100vh - 320px)}
-table{width:100%;border-collapse:collapse;min-width:1180px}
+table{width:100%;border-collapse:collapse;min-width:1200px}
 thead th{position:sticky;top:0;z-index:5;background:var(--surface);font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:left;padding:12px 14px;border-bottom:2px solid var(--border-md);white-space:nowrap}
 thead th.sort{cursor:pointer;user-select:none}
 thead th.sort:hover{color:var(--accent)}
 tbody td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
 tbody tr{transition:background .1s}
 tbody tr:hover{background:#FBFAF7}
+tbody tr.row-selected{background:#EBF2FB!important}
 tbody tr:last-child td{border-bottom:none}
 tbody tr.row-due td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .lrow td,.empty td{text-align:center;padding:48px 20px!important;color:var(--muted);font-size:13px}
+th.col-check,td.col-check{width:38px;padding:0 6px 0 14px;text-align:center}
+input.row-cb{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+/* Bulk action bar */
+.bulk-bar{display:none;align-items:center;gap:12px;background:var(--navy);color:#fff;border-radius:var(--radius-lg);padding:10px 18px;margin-bottom:12px;animation:slideDown .15s ease}
+.bulk-bar.visible{display:flex}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.bulk-count{font-size:13px;font-weight:600;flex:1}
+.bulk-label{font-size:12px;color:rgba(255,255,255,.75);white-space:nowrap}
+/* Dropdown: white bg + dark text so options are always readable */
+.bulk-status-sel{padding:6px 28px 6px 10px;border-radius:6px;border:2px solid rgba(255,255,255,.4);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%231E5AA8' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;color:#1C1B1A;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;-webkit-appearance:none;appearance:none;min-width:130px}
+.bulk-status-sel:focus{outline:none;border-color:#fff}
+.bulk-apply{background:#fff;color:var(--navy);border:none;border-radius:6px;padding:6px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:background .12s;letter-spacing:.01em}
+.bulk-apply:hover{background:#E0EAF8}
+.bulk-apply:disabled{opacity:.5;cursor:not-allowed}
+.bulk-cancel{background:none;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:5px 13px;font-size:12.5px;color:rgba(255,255,255,.85);cursor:pointer;transition:all .12s}
+.bulk-cancel:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08)}
 .co-name{font-weight:600;font-size:13.5px;color:var(--text);letter-spacing:-.005em}
 .co-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
 .row-acts{display:flex;gap:6px;opacity:0;transition:opacity .12s}
@@ -565,12 +584,27 @@ tbody tr:hover .row-acts{opacity:1}
     <span class="filter-clear" onclick="clearFilters()">✕ Clear</span>
     <span class="count-lbl" id="countLbl"></span>
     <span class="manager-note hidden" id="managerNote">Full team view — edits go to your own sheet</span>
+    <button class="btn-export" onclick="exportXLSX()" title="Export filtered view to Excel">⬇ Export Excel</button>
+  </div>
+
+  <div class="bulk-bar" id="bulkBar">
+    <span class="bulk-count" id="bulkCount">0 selected</span>
+    <span class="bulk-label">Change status to:</span>
+    <select class="bulk-status-sel" id="bulkStatus">
+      <option value="Following">Following</option>
+      <option value="Deal">Deal</option>
+      <option value="Success">Success</option>
+      <option value="Fail">Fail</option>
+    </select>
+    <button class="bulk-apply" id="bulkApplyBtn" onclick="bulkApplyStatus()">Apply</button>
+    <button class="bulk-cancel" onclick="clearBulkSelection()">✕ Cancel</button>
   </div>
 
   <div class="table-wrap">
     <table id="mainTable">
       <thead>
         <tr>
+          <th class="col-check"><input type="checkbox" class="row-cb" id="selectAllCb" title="Select all" onchange="toggleSelectAll(this.checked)"></th>
           <th>Company</th>
           <th class="sort" onclick="sortBy(1)">Priority</th>
           <th>Incharge</th>
@@ -583,12 +617,13 @@ tbody tr:hover .row-acts{opacity:1}
           <th>National</th>
           <th>Process</th>
           <th>Next Action</th>
+          <th>Last Contact</th>
           <th>Note</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="lrow"><td colspan="14">Sign in to view your pipeline.</td></tr>
+        <tr class="lrow"><td colspan="16">Sign in to view your pipeline.</td></tr>
       </tbody>
     </table>
   </div>
@@ -792,7 +827,7 @@ async function fetchAndCacheCRM(cacheKey) {
     setSyncStatus('error', 'Connection error');
     showToast('Failed to load data', true);
     if (!allData.length)
-      document.getElementById('tbody').innerHTML = '<tr class="lrow"><td colspan="13">Failed to load data.</td></tr>';
+      document.getElementById('tbody').innerHTML = '<tr class="lrow"><td colspan="16">Failed to load data.</td></tr>';
   }
 }
 
@@ -1019,12 +1054,14 @@ function applyFilters(){
   });
   if(sortCol>=0) filtered.sort((a,b)=>String(a[sortCol]||'').localeCompare(String(b[sortCol]||''))*sortDir);
   document.getElementById('countLbl').textContent=`${filtered.length} / ${allData.length} clients`;
+  // Clear bulk selection on filter change to avoid stale selected IDs
+  if(typeof selectedIds!=='undefined'){selectedIds.clear();document.getElementById('bulkBar')?.classList.remove('visible');}
   renderTable();
 }
 
 function renderTable(){
   const tbody=document.getElementById('tbody');
-  if(!filtered.length){tbody.innerHTML='<tr class="lrow"><td colspan="14"><div class="empty">No records match your filters.</div></td></tr>';return;}
+  if(!filtered.length){tbody.innerHTML='<tr class="lrow"><td colspan="16"><div class="empty">No records match your filters.</div></td></tr>';return;}
   const today=new Date(); today.setHours(0,0,0,0);
   tbody.innerHTML=filtered.map(row=>{
     const dataIdx=allData.indexOf(row);
@@ -1043,7 +1080,22 @@ function renderTable(){
     const nd=parseDMY(nxa);
     const isDue=nd&&nd<=today&&sta!=='Success'&&sta!=='Fail';
     const nxaCell=nxa?`<span style="font-size:12px;${isDue?'color:#C0392B;font-weight:700':'color:var(--muted)'}">${isDue?'⚠ ':''}${esc(nxa)}</span>`:'<span style="color:var(--hint)">—</span>';
-    return `<tr class="${isDue?'row-due':''}">
+    // Last Contact staleness
+    const lct=fmtDate(v(row,'lct'));
+    const lctDate=parseDMY(lct);
+    const isActive=sta!=='Success'&&sta!=='Fail';
+    let lctCell='<span style="color:var(--hint)">—</span>';
+    if(lct&&lctDate){
+      const lctDays=Math.floor((today-lctDate)/(1000*60*60*24));
+      let lctStyle='color:var(--muted)';
+      let lctIcon='';
+      if(isActive&&lctDays>60){lctStyle='color:#C0392B;font-weight:600';lctIcon='🔴 ';}
+      else if(isActive&&lctDays>30){lctStyle='color:#B07A1E;font-weight:500';lctIcon='🟡 ';}
+      lctCell=`<span style="font-size:12px;${lctStyle}" title="${lctDays} ngày trước">${lctIcon}${esc(lct)}</span>`;
+    }
+    const rowId=v(row,'id')||String(dataIdx);
+    return `<tr class="${isDue?'row-due':''}" data-id="${esc(rowId)}">
+      <td class="col-check"><input type="checkbox" class="row-cb" value="${esc(rowId)}" onchange="onRowSelect(this)" aria-label="Select row"></td>
       <td class="cell-co"><div class="co-name">${esc(co)}</div>${typStr?`<div class="co-meta">${typStr}</div>`:''}${ctc?`<div class="co-meta">👤 ${esc(ctc)}</div>`:''}</td>
       <td data-label="Priority"><span class="badge bp${priN}">${esc(pri)||'—'}</span></td>
       <td data-label="Incharge" style="font-size:12px;color:var(--muted)">${esc(inc)}</td>
@@ -1056,6 +1108,7 @@ function renderTable(){
       <td data-label="National"><span class="badge bp3">${natStr}</span></td>
       <td data-label="Process"><span class="badge ${prcBadge(prc)}">${esc(prc)||'—'}</span></td>
       <td data-label="Next Action">${nxaCell}</td>
+      <td data-label="Last Contact">${lctCell}</td>
       <td data-label="Note" style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)" title="${esc(note)}">${note?esc(note.substring(0,40))+(note.length>40?'…':''):''}</td>
       <td class="cell-act"><div class="row-acts"><button class="btn-e" onclick="openEdit(${dataIdx})">Edit</button><button class="btn-d" onclick="delRecord(${dataIdx})">Delete</button></div></td>
     </tr>`;
@@ -1102,6 +1155,423 @@ function clearFilters(){
   document.getElementById('f-date-max').value='';
   updateDateRangeStyle();
   applyFilters();
+}
+
+function exportXLSX(){
+  // Dynamically load SheetJS if not present
+  function doExport(){
+    const XLSX = window.XLSX;
+    const source = filtered.length ? filtered : allData;
+    const date = new Date();
+    const stamp = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}`;
+    const todayStr = date.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+    const wb = XLSX.utils.book_new();
+
+    // ── Colour palette (ARGB hex, no #) ──
+    const C = {
+      red:      'FFC8232C', redSoft: 'FFFBEDEA',
+      dark:     'FF2A2927', bg:      'FFF6F5F2',
+      navy:     'FF1E5AA8', navySoft:'FFEBF2FB',
+      green:    'FF1E7A4D', greenSoft:'FFE9F4EE',
+      amber:    'FFB07A1E', amberSoft:'FFFBF3E2',
+      slate:    'FF58595B', slateSoft:'FFF4F3F1',
+      midGray:  'FF909090', border:  'FFE0DDD8',
+      white:    'FFFFFFFF', rowAlt: 'FFF6F5F2',
+    };
+
+    // Status / priority badge colors
+    const STATUS_C = {
+      'Deal':      {fg:C.navy,  bg:C.navySoft},
+      'Success':   {fg:C.green, bg:C.greenSoft},
+      'Fail':      {fg:C.red,   bg:C.redSoft},
+      'Following': {fg:C.slate, bg:C.slateSoft},
+    };
+    const PRI_C = {
+      'P0': {fg:C.white, bg:C.red},
+      'P1': {fg:C.red,   bg:C.redSoft},
+      'P2': {fg:C.slate, bg:C.slateSoft},
+      'P3': {fg:C.midGray, bg:'FFF0EFed'},
+    };
+    const SRC_C = {
+      'CALL SALES':(v=>({fg:C.red,   bg:C.redSoft}))(0),
+      'WEBSITE':   {fg:C.navy,  bg:C.navySoft},
+      'SALE VISIT':{fg:C.green, bg:C.greenSoft},
+      'INTRO':     {fg:C.amber, bg:C.amberSoft},
+      'SNS':       {fg:C.slate, bg:C.slateSoft},
+    };
+    const PRC_C = {
+      'Send Flyer':{fg:C.slate, bg:C.slateSoft},
+      'Meeting':   {fg:C.navy,  bg:C.navySoft},
+      'Negotiate': {fg:C.amber, bg:C.amberSoft},
+      'Go DD':     {fg:C.green, bg:C.greenSoft},
+    };
+
+    // Helper: find matching badge key (handles trailing spaces)
+    function matchKey(val, map){
+      if(!val) return null;
+      const clean = val.trim();
+      for(const k of Object.keys(map)){
+        if(clean === k || clean.startsWith(k) || k.startsWith(clean)) return k;
+      }
+      return null;
+    }
+
+    // Cell style factory
+    function style(fontColor, bgColor, bold=false, sz=9, halign='left'){
+      return {
+        font:{name:'Arial', sz, bold, color:{rgb: fontColor.replace('FF','')}},
+        fill:{patternType:'solid', fgColor:{rgb: bgColor.replace('FF','')}},
+        alignment:{horizontal:halign, vertical:'center', wrapText:false},
+        border:{
+          top:{style:'thin',color:{rgb:'E0DDD8'}},
+          bottom:{style:'thin',color:{rgb:'E0DDD8'}},
+          left:{style:'thin',color:{rgb:'E0DDD8'}},
+          right:{style:'thin',color:{rgb:'E0DDD8'}},
+        }
+      };
+    }
+
+    // Build AOA (array of arrays) — then apply styles row by row
+    const wsData = [];
+
+    // Count stats
+    const statCounts = {};
+    ['Deal','Success','Fail','Following'].forEach(s=>{
+      statCounts[s] = source.filter(r=>String(v(r,'sta')).trim()===s).length;
+    });
+    const p0 = source.filter(r=>String(v(r,'pri')).trim()==='P0').length;
+    const p1 = source.filter(r=>String(v(r,'pri')).trim()==='P1').length;
+    const p2 = source.filter(r=>String(v(r,'pri')).trim()==='P2').length;
+
+    // Row 1: Brand header
+    wsData.push(['RSQUARE  |  CRM PIPELINE REPORT', ...Array(18).fill('')]);
+    // Row 2: Export info
+    wsData.push([`Exported: ${todayStr}    |    ${source.length} records`, ...Array(18).fill('')]);
+    // Row 3: Stats strip (packed into single row, spanned visually by column widths)
+    wsData.push([
+      `${statCounts.Deal}  DEAL`,
+      `${statCounts.Success}  SUCCESS`,
+      `${statCounts.Fail}  FAIL`,
+      `${statCounts.Following}  FOLLOWING`,
+      '', '',
+      `${p0}  P0`,
+      `${p1}  P1`,
+      `${p2}  P2`,
+      ...Array(10).fill('')
+    ]);
+    // Row 4: Column headers
+    const HEADERS = [
+      '#','Company','Priority','Incharge','Status','Source',
+      'Size (m²)','Budget ($)','Location','Expired','National',
+      'Type of Business','Process','Start Day',
+      'Contact Person','Contact Info','Last Contact','Next Action','Note'
+    ];
+    wsData.push(HEADERS);
+
+    // Data rows
+    const shortMap = {
+      'Huy Phan Quốc':'Huy PQ','Huy Nguyễn An':'An Huy','Trúc La Nguyên':'Trúc',
+      'Tuấn Nguyễn Công':'Tuấn','Tuyền Phạm Kim':'Tuyền','Lợi Nguyễn Thị Giai':'Lợi',
+    };
+    source.forEach((row, i) => {
+      const mn = String(v(row,'min')||'').replace('##','').trim();
+      const mx = String(v(row,'max')||'').replace('##','').trim();
+      const sizeStr = (mn && mx && mn!==mx) ? `${mn}–${mx}` : (mn || mx || '');
+      const bud = String(v(row,'bud')||'').replace('$xx','').replace(/^\$/,'').trim();
+      const inc = String(v(row,'inc')||'').trim();
+      wsData.push([
+        i+1,
+        String(v(row,'co')||''),
+        String(v(row,'pri')||'').trim() || '—',
+        shortMap[inc] || inc,
+        String(v(row,'sta')||'').trim() || '—',
+        String(v(row,'src')||'').trim() || '—',
+        sizeStr || '—',
+        bud || '—',
+        String(v(row,'loc')||'').replace('Location','').trim() || '—',
+        String(v(row,'exp')||'').replace('Expired Day','').trim() || '—',
+        String(v(row,'nat')||'').replace('National','').trim() || '—',
+        String(v(row,'typ')||'').replace('Type of Business','').trim() || '—',
+        String(v(row,'prc')||'').trim() || '—',
+        fmtDate(v(row,'sd')) || '—',
+        String(v(row,'ctc')||'').trim() || '',
+        String(v(row,'cin')||'').trim() || '',
+        fmtDate(v(row,'lct')) || '',
+        fmtDate(v(row,'nxa')) || '',
+        String(v(row,'note')||'').trim() || '',
+      ]);
+    });
+
+    // Create worksheet
+    const ws2 = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Column widths
+    ws2['!cols'] = [
+      {wch:4},{wch:26},{wch:9},{wch:13},{wch:11},{wch:13},
+      {wch:10},{wch:11},{wch:18},{wch:9},{wch:10},
+      {wch:20},{wch:13},{wch:11},
+      {wch:16},{wch:14},{wch:12},{wch:12},{wch:28}
+    ];
+
+    // Row heights
+    ws2['!rows'] = [
+      {hpt:28},  // row 1 brand
+      {hpt:16},  // row 2 sub
+      {hpt:24},  // row 3 stats
+      {hpt:22},  // row 4 headers
+    ];
+    for(let i=0;i<source.length;i++) ws2['!rows'].push({hpt:20});
+
+    // Merges: row 1 and 2 span all columns
+    ws2['!merges'] = [
+      {s:{r:0,c:0}, e:{r:0,c:18}},  // Brand header
+      {s:{r:1,c:0}, e:{r:1,c:18}},  // Sub-header
+    ];
+
+    // Apply cell styles
+    const numRows = wsData.length;
+    const numCols = 19;
+    const getLetter = n => {
+      let s=''; while(n>0){s=String.fromCharCode(64+(n%26||26))+s;n=Math.floor((n-1)/26);}return s;
+    };
+
+    for(let r=0;r<numRows;r++){
+      const isEven = r >= 4 && (r-4)%2===0;
+      const rowBg = isEven ? C.white : C.rowAlt;
+      for(let c2=0;c2<numCols;c2++){
+        const addr = getLetter(c2+1)+(r+1);
+        if(!ws2[addr]) ws2[addr] = {v:'', t:'s'};
+        const cell = ws2[addr];
+
+        // Row 0: Brand header
+        if(r===0){
+          cell.s = {
+            font:{name:'Arial',sz:13,bold:true,color:{rgb:'FFFFFF'}},
+            fill:{patternType:'solid',fgColor:{rgb:'2A2927'}},
+            alignment:{horizontal:'left',vertical:'center',indent:1},
+          };
+          continue;
+        }
+        // Row 1: Sub-header
+        if(r===1){
+          cell.s = {
+            font:{name:'Arial',sz:9,italic:true,color:{rgb:'909090'}},
+            fill:{patternType:'solid',fgColor:{rgb:'F0EFec'}},
+            alignment:{horizontal:'left',vertical:'center',indent:1},
+          };
+          continue;
+        }
+        // Row 2: Stats strip
+        if(r===2){
+          const statsColors = [
+            {fg:C.navy,bg:C.navySoft},{fg:C.green,bg:C.greenSoft},
+            {fg:C.red,bg:C.redSoft},{fg:C.slate,bg:C.slateSoft},
+            {fg:C.dark,bg:C.bg},{fg:C.dark,bg:C.bg},
+            {fg:C.red,bg:C.redSoft},{fg:C.amber,bg:C.amberSoft},{fg:C.slate,bg:C.slateSoft},
+          ];
+          const sc = statsColors[c2] || {fg:C.midGray, bg:C.bg};
+          cell.s = {
+            font:{name:'Arial',sz:9,bold:true,color:{rgb:sc.fg.replace('FF','')}},
+            fill:{patternType:'solid',fgColor:{rgb:sc.bg.replace('FF','')}},
+            alignment:{horizontal:'center',vertical:'center'},
+            border:{bottom:{style:'medium',color:{rgb:'E0DDD8'}}},
+          };
+          continue;
+        }
+        // Row 3: Column headers
+        if(r===3){
+          cell.s = {
+            font:{name:'Arial',sz:9,bold:true,color:{rgb:'FFFFFF'}},
+            fill:{patternType:'solid',fgColor:{rgb:'2A2927'}},
+            alignment:{horizontal: c2<=1 ? 'center':'left', vertical:'center', indent: c2>1?1:0},
+            border:{bottom:{style:'medium',color:{rgb:'C8232C'}}},
+          };
+          continue;
+        }
+        // Data rows
+        const dataRow = source[r-4];
+        const bdr = {
+          top:{style:'thin',color:{rgb:'E0DDD8'}},
+          bottom:{style:'thin',color:{rgb:'E0DDD8'}},
+          left:{style:'thin',color:{rgb:'E0DDD8'}},
+          right:{style:'thin',color:{rgb:'E0DDD8'}},
+        };
+        // Default style
+        let cellStyle = {
+          font:{name:'Arial',sz:9,color:{rgb:'2A2927'}},
+          fill:{patternType:'solid',fgColor:{rgb:rowBg.replace('FF','')}},
+          alignment:{horizontal:'left',vertical:'center',wrapText:false,indent:1},
+          border:bdr,
+        };
+
+        // Column-specific overrides
+        if(c2===0){ // # (row number)
+          cellStyle.font.color={rgb:'909090'};cellStyle.font.sz=8;
+          cellStyle.alignment.horizontal='center';cellStyle.alignment.indent=0;
+        } else if(c2===1){ // Company — bold
+          cellStyle.font.bold=true;cellStyle.font.sz=10;
+        } else if(c2===2){ // Priority badge
+          const pri = String(v(dataRow,'pri')||'').trim();
+          const pc = PRI_C[pri]||{fg:C.slate,bg:C.slateSoft};
+          cellStyle.font.color={rgb:pc.fg.replace('FF','')};
+          cellStyle.font.bold=true;
+          cellStyle.fill.fgColor={rgb:pc.bg.replace('FF','')};
+          cellStyle.alignment.horizontal='center';cellStyle.alignment.indent=0;
+        } else if(c2===3){ // Incharge
+          cellStyle.font.color={rgb:C.slate.replace('FF','')};
+        } else if(c2===4){ // Status badge
+          const sta = String(v(dataRow,'sta')||'').trim();
+          const sc = STATUS_C[sta]||{fg:C.slate,bg:C.slateSoft};
+          cellStyle.font.color={rgb:sc.fg.replace('FF','')};
+          cellStyle.font.bold=true;
+          cellStyle.fill.fgColor={rgb:sc.bg.replace('FF','')};
+          cellStyle.alignment.horizontal='center';cellStyle.alignment.indent=0;
+        } else if(c2===5){ // Source badge
+          const src = String(v(dataRow,'src')||'').trim();
+          const mk = matchKey(src, SRC_C);
+          const sc = mk ? SRC_C[mk] : {fg:C.slate,bg:C.slateSoft};
+          cellStyle.font.color={rgb:sc.fg.replace('FF','')};
+          cellStyle.font.bold=true;
+          cellStyle.fill.fgColor={rgb:sc.bg.replace('FF','')};
+          cellStyle.alignment.horizontal='center';cellStyle.alignment.indent=0;
+        } else if(c2===6 || c2===7){ // Size, Budget
+          cellStyle.alignment.horizontal='right';cellStyle.alignment.indent=0;
+          if(c2===7&&cell.v&&cell.v!=='—') cellStyle.font.bold=true;
+        } else if(c2===10){ // National
+          cellStyle.font.bold=true;cellStyle.font.color={rgb:C.navy.replace('FF','')};
+          cellStyle.alignment.horizontal='center';cellStyle.alignment.indent=0;
+        } else if(c2===12){ // Process badge
+          const prc = String(v(dataRow,'prc')||'').trim();
+          const mk = matchKey(prc, PRC_C);
+          const pc = mk ? PRC_C[mk] : {fg:C.slate,bg:C.slateSoft};
+          cellStyle.font.color={rgb:pc.fg.replace('FF','')};
+          cellStyle.font.bold=true;
+          cellStyle.fill.fgColor={rgb:pc.bg.replace('FF','')};
+          cellStyle.alignment.horizontal='center';cellStyle.alignment.indent=0;
+        } else if(c2===13 || c2===16 || c2===17){ // Dates
+          cellStyle.alignment.horizontal='center';cellStyle.alignment.indent=0;
+          cellStyle.font.color={rgb:C.slate.replace('FF','')};
+          // Last Contact staleness coloring
+          if(c2===16 && cell.v){
+            const sta = String(v(dataRow,'sta')||'').trim();
+            if(sta!=='Success'&&sta!=='Fail'){
+              const parts=cell.v.split('/');
+              if(parts.length===3){
+                const dt=new Date(Number(parts[2]),Number(parts[1])-1,Number(parts[0]));
+                const daysOld=Math.floor((new Date()-dt)/(864e5));
+                if(daysOld>60){cellStyle.font.color={rgb:'C8232C'};cellStyle.font.bold=true;}
+                else if(daysOld>30){cellStyle.font.color={rgb:'B07A1E'};cellStyle.font.bold=true;}
+              }
+            }
+          }
+          // Next Action overdue
+          if(c2===17 && cell.v){
+            const sta = String(v(dataRow,'sta')||'').trim();
+            if(sta!=='Success'&&sta!=='Fail'){
+              const parts=cell.v.split('/');
+              if(parts.length===3){
+                const dt=new Date(Number(parts[2]),Number(parts[1])-1,Number(parts[0]));
+                if(dt<new Date()){cellStyle.font.color={rgb:'C8232C'};cellStyle.font.bold=true;}
+              }
+            }
+          }
+        } else if(c2===14){ // Contact Person
+          if(cell.v){cellStyle.font.color={rgb:C.navy.replace('FF','')};cellStyle.font.bold=true;}
+          else cellStyle.font.color={rgb:C.midGray.replace('FF','')};
+        }
+
+        cell.s = cellStyle;
+      }
+    }
+
+    // Freeze row 4 (header) — SheetJS Pro feature, approximate via sheet state
+    ws2['!freeze'] = {xSplit:0, ySplit:4, topLeftCell:'A5', activePane:'bottomLeft'};
+
+    XLSX.utils.book_append_sheet(wb, ws2, 'CRM Pipeline');
+
+    // Download
+    XLSX.writeFile(wb, `rsquare-crm-${stamp}.xlsx`);
+    showToast(`Exported ${source.length} records to Excel`);
+  }
+
+  // Load SheetJS on demand
+  if(window.XLSX){
+    doExport();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = doExport;
+    s.onerror = () => showToast('Could not load Excel library', true);
+    document.head.appendChild(s);
+  }
+}
+// ── BULK ACTIONS ──
+let selectedIds = new Set();
+
+function onRowSelect(cb){
+  const id=cb.value;
+  const tr=cb.closest('tr');
+  if(cb.checked){selectedIds.add(id);tr.classList.add('row-selected');}
+  else{selectedIds.delete(id);tr.classList.remove('row-selected');}
+  updateBulkBar();
+}
+
+function toggleSelectAll(checked){
+  document.querySelectorAll('#tbody .row-cb').forEach(cb=>{
+    cb.checked=checked;
+    const id=cb.value;
+    const tr=cb.closest('tr');
+    if(checked){selectedIds.add(id);tr.classList.add('row-selected');}
+    else{selectedIds.delete(id);tr.classList.remove('row-selected');}
+  });
+  updateBulkBar();
+}
+
+function updateBulkBar(){
+  const bar=document.getElementById('bulkBar');
+  const cnt=document.getElementById('bulkCount');
+  if(selectedIds.size>0){bar.classList.add('visible');cnt.textContent=`${selectedIds.size} record${selectedIds.size>1?'s':''} selected`;}
+  else{bar.classList.remove('visible');}
+  const allCbs=[...document.querySelectorAll('#tbody .row-cb')];
+  const selCb=document.getElementById('selectAllCb');
+  if(selCb&&allCbs.length>0) selCb.checked=allCbs.length>0&&allCbs.every(c=>c.checked);
+}
+
+function clearBulkSelection(){
+  selectedIds.clear();
+  document.querySelectorAll('.row-cb').forEach(cb=>{cb.checked=false;});
+  document.querySelectorAll('.row-selected').forEach(tr=>tr.classList.remove('row-selected'));
+  updateBulkBar();
+}
+
+async function bulkApplyStatus(){
+  if(!selectedIds.size)return;
+  const newStatus=document.getElementById('bulkStatus').value;
+  if(!confirm(`Change status of ${selectedIds.size} record(s) to "${newStatus}"?`))return;
+  const btn=document.getElementById('bulkApplyBtn');
+  btn.disabled=true;btn.textContent='Saving…';setSyncStatus('loading','Bulk update…');
+  let ok=0,fail=0;
+  const idsArr=[...selectedIds];
+  for(const id of idsArr){
+    const dataIdx=allData.findIndex(r=>v(r,'id')===id);
+    if(dataIdx<0){fail++;continue;}
+    const row=[...allData[dataIdx]];while(row.length<26)row.push('');
+    row[colMap.sta]=newStatus;
+    try{
+      const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'update',email:currentUser.email,id,row})});
+      const json=await res.json();
+      if(!json.success)throw new Error(json.error||'Failed');
+      allData[dataIdx]=json.row||row;
+      ok++;
+    }catch(e){fail++;}
+  }
+  invalidateCRMCache();
+  applyFilters();updateStats();
+  clearBulkSelection();
+  btn.disabled=false;btn.textContent='Apply';
+  setSyncStatus(fail?'error':'ok',fail?'Partial error':'Synced');
+  showToast(`Updated ${ok} record${ok!==1?'s':''}${fail?` (${fail} failed)`:''}`);
 }
 function quickDueFilter(){
   document.getElementById('f-followup').value='due';
@@ -1429,6 +1899,12 @@ function renderDashboard() {
         <div class="chart-wrap"><canvas id="chartIncharge"></canvas></div>
       </div>
     </div>
+
+    <!-- Conversion Funnel -->
+    <div class="dash-chart-card" style="margin-bottom:16px">
+      <div class="dash-chart-title">Conversion Funnel</div>
+      <div id="funnelWrap" style="padding:8px 0"></div>
+    </div>
   `;
 
   // Destroy old chart instances
@@ -1491,8 +1967,34 @@ function renderDashboard() {
         scales:{ x:{ stacked:true, ticks:{font:{size:10}} }, y:{ stacked:true, beginAtZero:true } } }
     });
   }
-}
 
+  // Conversion Funnel
+  const funnelStages = [
+    { label: 'Total Leads',    key: null,        count: total,   color: '#58595B' },
+    { label: 'Send Flyer',     key: 'Send Flyer', count: allData.filter(r=>String(v(r,'prc')).includes('Flyer')).length, color: '#B07A1E' },
+    { label: 'Meeting',        key: 'Meeting',    count: allData.filter(r=>String(v(r,'prc')).toLowerCase().includes('meet')).length, color: '#1E5AA8' },
+    { label: 'Negotiate',      key: 'Negotiate',  count: allData.filter(r=>String(v(r,'prc')).toLowerCase().includes('neg')).length, color: '#A06020' },
+    { label: 'Due Diligence',  key: 'Go DD',      count: allData.filter(r=>String(v(r,'prc')).includes('DD')).length, color: '#1E7A4D' },
+    { label: 'Deal',           key: 'deal',       count: deal,   color: '#1E5AA8' },
+    { label: 'Success',        key: 'success',    count: success, color: '#1E7A4D' },
+  ];
+  const funnelEl = document.getElementById('funnelWrap');
+  if(funnelEl && total > 0){
+    funnelEl.innerHTML = funnelStages.map((s,i) => {
+      const pct = total > 0 ? Math.round(s.count/total*100) : 0;
+      const width = Math.max(pct, 4);
+      const dropPct = i > 0 && funnelStages[i-1].count > 0 ? Math.round((1 - s.count/funnelStages[i-1].count)*100) : null;
+      return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div style="width:130px;text-align:right;font-size:12px;color:var(--muted);white-space:nowrap">${s.label}</div>
+        <div style="flex:1;position:relative;height:28px;background:var(--border);border-radius:4px;overflow:hidden">
+          <div style="position:absolute;inset:0;width:${width}%;background:${s.color};border-radius:4px;transition:width .3s ease"></div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:600;color:${pct>25?'#fff':'var(--text)'}">${s.count}</div>
+        </div>
+        <div style="width:80px;font-size:11.5px;color:var(--muted);white-space:nowrap">${pct}% of leads${dropPct!==null&&dropPct>0?`<br><span style="color:#C0392B;font-size:10.5px">▼ ${dropPct}% drop</span>`:''}</div>
+      </div>`;
+    }).join('');
+  }
+}
 function switchTab(tab, el) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
