@@ -811,28 +811,17 @@ const CANONICAL_INCHARGE = [
 ];
 
 async function loadIncharge(){
-  // Always populate from canonical list — API result used only if it
-  // contains names not in our list (future new hires)
-  let names = [...CANONICAL_INCHARGE];
+  // Fetch from API to pick up any new hires not in CANONICAL_INCHARGE
   try{
     const res=await fetch(`${API}?action=getIncharge&email=${encodeURIComponent(currentUser.email)}`);
     const json=await res.json();
-    // Merge: add any new full names from API that aren't already in canonical list
     (json.data||[]).forEach(n=>{
       const full = resolveIncharge(n);
-      if(!names.includes(full)) names.push(full);
+      if(!CANONICAL_INCHARGE.includes(full)) CANONICAL_INCHARGE.push(full);
     });
   }catch(e){}
-  names.sort();
-  const sel=document.getElementById('f-incharge'),selM=document.getElementById('m-inc');
-  sel.innerHTML='<option value="">Incharge</option>';selM.innerHTML='';
-  names.forEach(name=>{
-    sel.innerHTML+=`<option value="${esc(name)}">${esc(name)}</option>`;
-    selM.innerHTML+=`<option value="${esc(name)}">${esc(name)}</option>`;
-  });
-  // Set default to current user's full name
-  const myFull = resolveIncharge(currentUser.name);
-  if([...selM.options].some(o=>o.value===myFull)) selM.value=myFull;
+  // Populate the multi-select incharge panel
+  syncInchargeFilter();
 }
 
 function syncMonthFilter(){
@@ -852,11 +841,12 @@ function syncInchargeFilter(){
 }
 
 function syncInchargeFromData(){
-  const names=[...new Set(allData.map(r=>String(v(r,'inc'))).filter(n=>n&&n!==''))].sort();
-  const sel=document.getElementById('f-incharge'),prev=sel.value;
-  sel.innerHTML='<option value="">Incharge</option>';
-  names.forEach(name=>{sel.innerHTML+=`<option value="${name}">${name}</option>`;});
-  sel.value=prev;
+  // Add any names from data not already in canonical list, then refresh panel
+  allData.forEach(r=>{
+    const n=resolveIncharge(String(v(r,'inc')).trim());
+    if(n&&!CANONICAL_INCHARGE.includes(n)) CANONICAL_INCHARGE.push(n);
+  });
+  syncInchargeFilter();
 }
 
 let colMap={co:0,pri:1,inc:2,sta:3,neworder:4,sd:5,src:6,min:7,max:8,bud:9,loc:10,exp:11,nat:12,typ:13,prc:14,expcom:15,com:16,note:17,id:18,ctc:19,cin:20,lct:21,nxa:22,cre:23,upd:24,upb:25};
