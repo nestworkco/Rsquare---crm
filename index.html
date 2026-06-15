@@ -65,6 +65,16 @@ button{font-family:var(--font)}
 .btn-login:active{transform:translateY(1px)}
 .btn-login:disabled{opacity:.55;cursor:not-allowed}
 .login-err{font-size:12.5px;color:var(--accent);margin-top:10px;min-height:18px;text-align:left}
+/* Setup PIN overlay — reuses login-wrap background */
+.setup-pin-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:44px 40px 36px;width:410px;max-width:100%;text-align:center;box-shadow:var(--shadow-md);position:relative;overflow:hidden}
+.setup-pin-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--green)}
+.setup-pin-steps{display:flex;gap:6px;justify-content:center;margin-bottom:24px}
+.setup-step{width:32px;height:4px;border-radius:2px;background:var(--border)}
+.setup-step.done{background:var(--green)}
+.pin-strength{height:4px;border-radius:2px;margin:-10px 0 16px;transition:all .3s}
+.pin-strength.weak{background:var(--accent);width:33%}
+.pin-strength.ok{background:var(--amber);width:66%}
+.pin-strength.strong{background:var(--green);width:100%}
 
 /* ════════ TOPBAR — ink bar with brick keyline ════════ */
 .topbar{background:var(--ink);border-bottom:3px solid var(--accent);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
@@ -325,6 +335,21 @@ tbody tr:hover .row-acts{opacity:1}
 .btn-sm:hover{background:var(--accent-hover)}
 .btn-sm:disabled{opacity:.6;cursor:not-allowed}
 
+/* ════════ DEAL TRANSFER ════════ */
+.transfer-banner{display:none;margin:0 0 14px;padding:12px 16px;border-radius:var(--radius);background:var(--amber-soft);border:1px solid #EFDFBC;gap:10px;align-items:flex-start}
+.transfer-banner.visible{display:flex}
+.transfer-banner-icon{font-size:18px;line-height:1;flex-shrink:0;margin-top:1px}
+.transfer-banner-body{flex:1;font-size:12.5px;color:#6B4A10;line-height:1.5}
+.transfer-banner-body strong{color:#4A3000;font-weight:700}
+.transfer-from{text-decoration:line-through;color:var(--muted)}
+.transfer-arrow{margin:0 6px;color:var(--amber);font-weight:700}
+.transfer-to{font-weight:700;color:var(--green)}
+.transfer-confirm-row{margin-top:8px;display:flex;align-items:center;gap:8px}
+.btn-transfer{border:none;background:var(--amber);color:#fff;border-radius:6px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-transfer:hover{background:#8A5C10}
+.btn-save-only{border:1px solid var(--border-md);background:var(--surface);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s}
+.btn-save-only:hover{border-color:var(--hint);color:var(--text)}
+
 /* ════════ TOAST & UNDO ════════ */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:var(--radius);font-size:13px;opacity:0;transform:translateY(8px);transition:all .2s;z-index:1000;pointer-events:none;box-shadow:var(--shadow-md);border-left:3px solid var(--green)}
 .toast.show{opacity:1;transform:none}
@@ -448,9 +473,31 @@ tbody tr:hover .row-acts{opacity:1}
     <div class="login-title">CRM Login</div>
     <div class="login-sub">Internal use only — Rsquare Vietnam</div>
     <label class="login-label">Work email</label>
-    <input type="email" id="emailInput" placeholder="name@rsquare.vn" autocomplete="email">
+    <input type="email" id="emailInput" placeholder="name@rsquare.vn" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('pinInput').focus()">
+    <label class="login-label">PIN</label>
+    <input type="password" id="pinInput" placeholder="Enter your PIN" maxlength="8" inputmode="numeric" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="btn-login" id="btnLogin" onclick="doLogin()">Sign in</button>
     <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- SETUP PIN (shown only on first login when no PIN is set) -->
+<div class="login-wrap hidden" id="setupPinWrap">
+  <div class="setup-pin-card">
+    <img class="login-logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" alt="Rsquare">
+    <div class="login-divider"></div>
+    <div class="setup-pin-steps"><div class="setup-step done" id="sp1"></div><div class="setup-step done" id="sp2"></div><div class="setup-step" id="sp3"></div></div>
+    <div class="login-title" style="color:var(--green)">🔐 Set your PIN</div>
+    <div class="login-sub" id="setupWelcome">Welcome! Create a personal PIN to secure your account.</div>
+    <label class="login-label">New PIN (4–8 digits)</label>
+    <input type="password" id="setupPin1" placeholder="Enter PIN" maxlength="8" inputmode="numeric" autocomplete="new-password"
+      oninput="updatePinStrength()" onkeydown="if(event.key==='Enter')document.getElementById('setupPin2').focus()">
+    <div class="pin-strength" id="pinStrength"></div>
+    <label class="login-label">Confirm PIN</label>
+    <input type="password" id="setupPin2" placeholder="Re-enter PIN" maxlength="8" inputmode="numeric" autocomplete="new-password"
+      onkeydown="if(event.key==='Enter')doSetupPin()">
+    <button class="btn-login" id="btnSetupPin" onclick="doSetupPin()" style="background:var(--green)">Set PIN &amp; Sign in</button>
+    <div class="login-err" id="setupPinErr"></div>
   </div>
 </div>
 
@@ -650,6 +697,19 @@ tbody tr:hover .row-acts{opacity:1}
       <button class="mc" onclick="closeModal()">×</button>
     </div>
     <div class="mb">
+      <!-- Deal Transfer Banner — shown only when manager changes Incharge -->
+      <div class="transfer-banner" id="transferBanner">
+        <div class="transfer-banner-icon">🔄</div>
+        <div class="transfer-banner-body">
+          <strong>Deal Transfer Detected</strong><br>
+          Incharge will change: <span class="transfer-from" id="transferFrom"></span><span class="transfer-arrow">→</span><span class="transfer-to" id="transferTo"></span><br>
+          <span style="font-size:11.5px;color:var(--muted)">Record sẽ được move sang sheet của người mới. Lịch sử, ID và dữ liệu gốc được giữ nguyên.</span>
+          <div class="transfer-confirm-row">
+            <button class="btn-transfer" onclick="saveRecord(true)">✓ Confirm Transfer & Save</button>
+            <button class="btn-save-only" onclick="saveRecord(false)">Save without transfer</button>
+          </div>
+        </div>
+      </div>
       <div class="fg">
         <div class="fsec">Client</div>
         <div class="ff"><label>Company name *</label><input type="text" id="m-co" placeholder="e.g. LOTUS INTERNATIONAL"></div>
@@ -670,7 +730,7 @@ tbody tr:hover .row-acts{opacity:1}
         <div><label>Status</label><select id="m-sta"><option selected>Following</option><option>Deal</option><option>Success</option><option>Fail</option></select></div>
         <div><label>Process</label><select id="m-prc"><option>Send Flyer</option><option>Meeting</option><option>Negotiate</option><option>Go DD</option></select></div>
         <div><label>Source</label><select id="m-src"><option>CALL SALES</option><option>WEBSITE</option><option>SALE VISIT</option><option>SNS</option><option>INTRO</option><option>DBR VISIT</option><option>EDM FLYER</option></select></div>
-        <div><label>Incharge</label><select id="m-inc"></select></div>
+        <div><label>Incharge</label><select id="m-inc" onchange="onIncChange()"></select></div>
         <div><label>Start Day</label><input type="date" id="m-sd"></div>
 
         <div class="fsec">Follow-up</div>
@@ -684,7 +744,7 @@ tbody tr:hover .row-acts{opacity:1}
     </div>
     <div class="mf">
       <button class="btn-cm" onclick="closeModal()">Cancel</button>
-      <button class="btn-sm" id="btnSave" onclick="saveRecord()">Save to Sheets</button>
+      <button class="btn-sm" id="btnSave" onclick="saveRecord(false)">Save to Sheets</button>
     </div>
   </div>
 </div>
@@ -731,36 +791,108 @@ tbody tr:hover .row-acts{opacity:1}
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxwG6kr6J6KOd4TfKrgNZHNbxunFrasATcetmPmZhv4Vd2-YipLCT7u40oO-29DTwwI-g/exec';
-let currentUser=null,allData=[],filtered=[],editingDataIdx=null,editingId=null,sortCol=-1,sortDir=1;
+let currentUser=null,allData=[],filtered=[],editingDataIdx=null,editingId=null,editingOrigIncharge=null,sortCol=-1,sortDir=1;
 
 async function doLogin(){
   const email=document.getElementById('emailInput').value.trim().toLowerCase();
+  const pin=document.getElementById('pinInput').value.trim();
   const errEl=document.getElementById('loginErr');
   errEl.textContent='';
   if(!email){errEl.textContent='Please enter your email';return;}
   if(!email.endsWith('@rsquare.vn')){errEl.textContent='Only @rsquare.vn emails are accepted';return;}
+  if(!pin){errEl.textContent='Please enter your PIN';return;}
   const btn=document.getElementById('btnLogin');
-  btn.disabled=true;btn.textContent='Authenticating...';
+  btn.disabled=true;btn.textContent='Verifying...';
   try{
-    const res=await fetch(`${API}?action=login&email=${encodeURIComponent(email)}`);
+    const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'login',email,pin})});
     const json=await res.json();
-    if(json.error){errEl.textContent='This email does not have access';btn.disabled=false;btn.textContent='Sign in';return;}
-    currentUser={email,name:json.name,role:json.role};
+    if(json.needsSetup){
+      // PIN chưa được set — chuyển sang màn hình tự setup
+      document.getElementById('pinInput').value='';
+      btn.disabled=false;btn.textContent='Sign in';
+      showSetupPin(email,json.name);
+      return;
+    }
+    if(!json.success){errEl.textContent=json.error||'Login failed';btn.disabled=false;btn.textContent='Sign in';return;}
+    currentUser={email,name:json.name,role:json.role,token:json.token,expiresAt:json.expiresAt};
     localStorage.setItem('rsq_user',JSON.stringify(currentUser));
+    document.getElementById('pinInput').value='';
     showApp();
   }catch(e){errEl.textContent='Connection error. Please try again.';btn.disabled=false;btn.textContent='Sign in';}
 }
 
+// Màn hình tự đặt PIN lần đầu
+let _setupEmail='';
+function showSetupPin(email,name){
+  _setupEmail=email;
+  document.getElementById('loginWrap').classList.add('hidden');
+  document.getElementById('setupPinWrap').classList.remove('hidden');
+  document.getElementById('setupWelcome').textContent=`Welcome${name?' '+name.split(' ').pop():''}! Create a personal PIN to secure your account.`;
+  document.getElementById('setupPin1').value='';
+  document.getElementById('setupPin2').value='';
+  document.getElementById('setupPinErr').textContent='';
+  document.getElementById('pinStrength').className='pin-strength';
+  document.getElementById('pinStrength').style.width='0';
+  document.getElementById('sp3').classList.remove('done');
+  setTimeout(()=>document.getElementById('setupPin1').focus(),100);
+}
+
+function updatePinStrength(){
+  const pin=document.getElementById('setupPin1').value;
+  const bar=document.getElementById('pinStrength');
+  if(!pin){bar.className='pin-strength';bar.style.width='0';return;}
+  if(pin.length<5){bar.className='pin-strength weak';}
+  else if(pin.length<7){bar.className='pin-strength ok';}
+  else{bar.className='pin-strength strong';}
+}
+
+async function doSetupPin(){
+  const newPin=document.getElementById('setupPin1').value.trim();
+  const confirmPin=document.getElementById('setupPin2').value.trim();
+  const errEl=document.getElementById('setupPinErr');
+  errEl.textContent='';
+  if(!newPin||newPin.length<4){errEl.textContent='PIN phải từ 4–8 chữ số';return;}
+  if(!/^\d+$/.test(newPin)){errEl.textContent='PIN chỉ được chứa chữ số';return;}
+  if(newPin!==confirmPin){errEl.textContent='PIN xác nhận không khớp';return;}
+  const btn=document.getElementById('btnSetupPin');
+  btn.disabled=true;btn.textContent='Setting PIN...';
+  try{
+    const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'setupPin',email:_setupEmail,newPin,confirmPin})});
+    const json=await res.json();
+    if(!json.success){errEl.textContent=json.error||'Failed';btn.disabled=false;btn.textContent='Set PIN & Sign in';return;}
+    // PIN set + session created — go straight to app
+    document.getElementById('sp3').classList.add('done');
+    currentUser={email:_setupEmail,name:json.name,role:json.role,token:json.token,expiresAt:json.expiresAt};
+    localStorage.setItem('rsq_user',JSON.stringify(currentUser));
+    document.getElementById('setupPin1').value='';
+    document.getElementById('setupPin2').value='';
+    document.getElementById('setupPinWrap').classList.add('hidden');
+    showToast('PIN set successfully! Welcome to Rsquare CRM.');
+    showApp();
+  }catch(e){errEl.textContent='Connection error. Please try again.';btn.disabled=false;btn.textContent='Set PIN & Sign in';}
+}
+
 function doLogout(){
-  // Clear all caches on logout
   Object.keys(localStorage).filter(k=>k.startsWith('rsq_')).forEach(k=>localStorage.removeItem(k));
-  currentUser=null;allData=[];filtered=[];
+  currentUser=null;allData=[];filtered=[];_setupEmail='';
   document.getElementById('appWrap').classList.add('hidden');
+  document.getElementById('setupPinWrap').classList.add('hidden');
   document.getElementById('loginWrap').classList.remove('hidden');
   document.getElementById('emailInput').value='';
+  document.getElementById('pinInput').value='';
   document.getElementById('loginErr').textContent='';
   document.getElementById('btnLogin').disabled=false;
   document.getElementById('btnLogin').textContent='Sign in';
+}
+
+function checkSessionExpiry(){
+  if(!currentUser||!currentUser.expiresAt) return false;
+  if(Date.now()>currentUser.expiresAt){
+    showToast('Session expired — please sign in again',true);
+    setTimeout(doLogout,1500);
+    return true;
+  }
+  return false;
 }
 
 function showApp(){
@@ -812,12 +944,18 @@ async function loadData(forceRefresh=false){
 
 async function fetchAndCacheCRM(cacheKey) {
   try {
-    const res = await fetch(`${API}?action=getAll&email=${encodeURIComponent(currentUser.email)}`);
+    if(checkSessionExpiry()) return;
+    const res = await fetch(`${API}?action=getAll&email=${encodeURIComponent(currentUser.email)}&token=${encodeURIComponent(currentUser.token)}`);
     const json = await res.json();
-    if (json.error) throw new Error(json.error);
+    if(json.error){
+      if(json.error.includes('Session')||json.error.includes('session')){
+        showToast('Session expired — please sign in again',true);
+        setTimeout(doLogout,1500); return;
+      }
+      throw new Error(json.error);
+    }
     allData = json.data || [];
     if (json.headers) buildColMap(json.headers);
-    // Save to cache
     try {
       localStorage.setItem(cacheKey, JSON.stringify({ data: allData, headers: json.headers, ts: Date.now() }));
     } catch(e) {}
@@ -846,18 +984,15 @@ const CANONICAL_INCHARGE = [
 ];
 
 async function loadIncharge(){
-  // Fetch from API to pick up any new hires not in CANONICAL_INCHARGE
   try{
-    const res=await fetch(`${API}?action=getIncharge&email=${encodeURIComponent(currentUser.email)}`);
+    const res=await fetch(`${API}?action=getIncharge&email=${encodeURIComponent(currentUser.email)}&token=${encodeURIComponent(currentUser.token)}`);
     const json=await res.json();
     (json.data||[]).forEach(n=>{
       const full = resolveIncharge(n);
       if(!CANONICAL_INCHARGE.includes(full)) CANONICAL_INCHARGE.push(full);
     });
   }catch(e){}
-  // Populate filter MSD panel
   syncInchargeFilter();
-  // Populate modal m-inc dropdown
   populateIncModal();
 }
 
@@ -1559,7 +1694,7 @@ async function bulkApplyStatus(){
     const row=[...allData[dataIdx]];while(row.length<26)row.push('');
     row[colMap.sta]=newStatus;
     try{
-      const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'update',email:currentUser.email,id,row})});
+      const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'update',email:currentUser.email,token:currentUser.token,id,row})});
       const json=await res.json();
       if(!json.success)throw new Error(json.error||'Failed');
       allData[dataIdx]=json.row||row;
@@ -1581,7 +1716,8 @@ function quickDueFilter(){
 function setSyncStatus(state,text){document.getElementById('syncDot').className='sync-dot '+state;document.getElementById('syncText').textContent=text;}
 
 function openModal(){
-  editingDataIdx=null;editingId=null;
+  editingDataIdx=null;editingId=null;editingOrigIncharge=null;
+  document.getElementById('transferBanner').classList.remove('visible');
   document.getElementById('modalTitle').textContent='Add new client';
   document.getElementById('btnSave').textContent='Save to Sheets';
   ['m-co','m-ctc','m-cin','m-sd','m-exp','m-min','m-max','m-bud','m-loc','m-nat','m-typ','m-note','m-lct','m-nxa'].forEach(id=>document.getElementById(id).value='');
@@ -1589,7 +1725,8 @@ function openModal(){
   document.getElementById('m-src').value='CALL SALES';document.getElementById('m-prc').value='Send Flyer';
   // Use EMAIL_TO_FULL to get canonical full name; CANONICAL_INCHARGE guarantees it's in the list
   const EMAIL_TO_FULL = {
-    'huypq@rsquare.vn':   'Huy Phan Quốc',
+    'ccm@rsquare.vn':    'ChungMyeong Chae',
+    'huypq@rsquare.vn':  'Huy Phan Quốc',
     'trucln@rsquare.vn':  'Trúc La Nguyên',
     'tuyenpk@rsquare.vn': 'Tuyền Phạm Kim',
     'tuannc@rsquare.vn':  'Tuấn Nguyễn Công',
@@ -1618,6 +1755,9 @@ function openEdit(dataIdx){
   const row=allData[dataIdx];
   editingDataIdx=dataIdx;
   editingId=v(row,'id');
+  editingOrigIncharge=resolveIncharge(v(row,'inc'));  // track original for transfer detection
+  // Reset transfer banner
+  document.getElementById('transferBanner').classList.remove('visible');
   document.getElementById('modalTitle').textContent='Edit client';
   document.getElementById('btnSave').textContent='Save changes';
   document.getElementById('m-co').value=v(row,'co');
@@ -1654,9 +1794,29 @@ function openEdit(dataIdx){
   document.getElementById('m-note').value=v(row,'note');
   document.getElementById('modal').classList.add('open');
 }
-function closeModal(){document.getElementById('modal').classList.remove('open');editingDataIdx=null;editingId=null;}
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('transferBanner').classList.remove('visible');
+  editingDataIdx=null;editingId=null;editingOrigIncharge=null;
+}
 
-// ── Add Staff ──
+function onIncChange(){
+  // Only relevant for manager editing an existing record
+  if(currentUser.role!=='manager'||editingDataIdx===null) return;
+  const newInc=document.getElementById('m-inc').value.trim();
+  const banner=document.getElementById('transferBanner');
+  const btnSave=document.getElementById('btnSave');
+  if(newInc&&editingOrigIncharge&&newInc!==editingOrigIncharge){
+    // Incharge has changed — show transfer banner
+    document.getElementById('transferFrom').textContent=editingOrigIncharge;
+    document.getElementById('transferTo').textContent=newInc;
+    banner.classList.add('visible');
+    btnSave.style.display='none'; // hide default save; use banner buttons
+  } else {
+    banner.classList.remove('visible');
+    btnSave.style.display='';
+  }
+}
 function openAddStaff(){
   document.getElementById('ns-name').value='';
   document.getElementById('ns-email').value='';
@@ -1685,7 +1845,7 @@ async function saveNewStaff(){
   btn.disabled=true;btn.textContent='Adding…';
   try{
     // Call Apps Script to register new staff
-    const payload={action:'addStaff',email:currentUser.email,newEmail:email,newName:name,newSsid:ssid};
+    const payload={action:'addStaff',email:currentUser.email,token:currentUser.token,newEmail:email,newName:name,newSsid:ssid};
     const r=await fetch(API,{method:'POST',body:JSON.stringify(payload)});
     const json=await r.json();
     if(json.success){
@@ -1712,11 +1872,19 @@ async function saveNewStaff(){
   }
 }
 
-async function saveRecord(){
+async function saveRecord(doTransfer=false){
   const co=document.getElementById('m-co').value.trim();
   if(!co){showToast('Company name is required',true);return;}
   const btn=document.getElementById('btnSave');
-  btn.disabled=true;btn.textContent='Saving...';setSyncStatus('loading','Saving…');
+  const newInc=document.getElementById('m-inc').value.trim();
+  const isTransfer=doTransfer&&editingDataIdx!==null&&newInc!==editingOrigIncharge;
+  if(isTransfer){
+    // Disable both banner buttons during save
+    document.querySelectorAll('.btn-transfer,.btn-save-only').forEach(b=>{b.disabled=true;});
+  } else {
+    btn.disabled=true;btn.textContent='Saving...';
+  }
+  setSyncStatus('loading',isTransfer?'Transferring…':'Saving…');
   const isEdit=editingDataIdx!==null;
   // On edit: start from the existing row → preserve Commission, New Order, ID, Created At
   let row;
@@ -1733,7 +1901,7 @@ async function saveRecord(){
   row[colMap.sta]=g('m-sta');
   row[colMap.src]=g('m-src');
   row[colMap.sd]=fromInputDate(g('m-sd'));
-  row[colMap.min]=g('m-min');      // no placeholder — empty string when blank
+  row[colMap.min]=g('m-min');
   row[colMap.max]=g('m-max');
   row[colMap.bud]=g('m-bud');
   row[colMap.loc]=g('m-loc');
@@ -1747,13 +1915,22 @@ async function saveRecord(){
   row[colMap.lct]=fromInputDate(g('m-lct'));
   row[colMap.nxa]=fromInputDate(g('m-nxa'));
   try{
-    const payload=isEdit
-      ?{action:'update',email:currentUser.email,id:editingId,row}
-      :{action:'add',email:currentUser.email,row};
+    let payload;
+    if(isTransfer){
+      payload={action:'transfer',email:currentUser.email,token:currentUser.token,id:editingId,row,newIncharge:newInc};
+    } else if(isEdit){
+      payload={action:'update',email:currentUser.email,token:currentUser.token,id:editingId,row};
+    } else {
+      payload={action:'add',email:currentUser.email,token:currentUser.token,row};
+    }
     const res=await fetch(API,{method:'POST',body:JSON.stringify(payload)});
     const json=await res.json();
     if(!json.success) throw new Error(json.error||'');
-    if(isEdit){
+    if(isTransfer){
+      // Update local data: row moves to new incharge
+      allData[editingDataIdx]=json.row||row;
+      showToast(`✓ Deal transferred: ${editingOrigIncharge} → ${newInc}`);
+    } else if(isEdit){
       allData[editingDataIdx]=json.row||row;
       showToast('Saved changes to '+co);
     } else {
@@ -1761,10 +1938,16 @@ async function saveRecord(){
       else{row[colMap.id]=json.id||'';allData.push(row);}
       showToast('Added '+co);
     }
-    invalidateCRMCache(); // Invalidate cache so next load gets fresh data
+    invalidateCRMCache();
     syncMonthFilter();applyFilters();updateStats();closeModal();setSyncStatus('ok','Synced');
-  }catch(e){showToast('Save failed: '+(e.message||'please try again'),true);setSyncStatus('error','Error');}
-  finally{btn.disabled=false;btn.textContent=isEdit?'Save changes':'Save to Sheets';}
+  }catch(e){
+    showToast((isTransfer?'Transfer':'Save')+' failed: '+(e.message||'please try again'),true);
+    setSyncStatus('error','Error');
+  }
+  finally{
+    btn.disabled=false;btn.textContent=isEdit?'Save changes':'Save to Sheets';
+    document.querySelectorAll('.btn-transfer,.btn-save-only').forEach(b=>{b.disabled=false;});
+  }
 }
 
 async function delRecord(dataIdx){
@@ -1774,7 +1957,7 @@ async function delRecord(dataIdx){
   if(!confirm('Delete "'+v(row,'co')+'" from the sheet? This cannot be undone.')) return;
   setSyncStatus('loading','Deleting…');
   try{
-    const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'delete',email:currentUser.email,id})});
+    const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'delete',email:currentUser.email,token:currentUser.token,id})});
     const json=await res.json();
     if(!json.success) throw new Error(json.error||'');
     allData.splice(dataIdx,1);
@@ -2073,7 +2256,8 @@ function renderKPI() {
   // Overview cards: manager=team total, staff=own row only
   // Email → display name as it appears in the KPI sheet
   const KPI_NAME_MAP = {
-    'huypq@rsquare.vn':   'Huy Phan Quốc',
+    'ccm@rsquare.vn':    'ChungMyeong Chae',
+    'huypq@rsquare.vn':  'Huy Phan Quốc',
     'trucln@rsquare.vn':  'Trúc La Nguyên',
     'tuyenpk@rsquare.vn': 'Tuyền Phạm Kim',
     'tuannc@rsquare.vn':  'Tuấn Nguyễn Công',
@@ -2432,7 +2616,17 @@ document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key===
 document.getElementById('modal').addEventListener('keydown',e=>{if(e.key==='Escape') closeModal();});
 
 const saved=localStorage.getItem('rsq_user');
-if(saved){try{currentUser=JSON.parse(saved);showApp();}catch(e){localStorage.removeItem('rsq_user');}}
+if(saved){
+  try{
+    const u=JSON.parse(saved);
+    if(u&&u.token&&u.expiresAt&&Date.now()<u.expiresAt){
+      currentUser=u;showApp();
+    } else {
+      // Session expired — clear and show login
+      localStorage.removeItem('rsq_user');
+    }
+  }catch(e){localStorage.removeItem('rsq_user');}
+}
 </script>
 </body>
 </html>
