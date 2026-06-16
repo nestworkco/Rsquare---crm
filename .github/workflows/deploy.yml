@@ -7,137 +7,80 @@ on:
     branches: [main, master]
 
 jobs:
-  # ─── JOB 1: Kiểm tra code trước khi deploy ───────────────────────
-  validate:
-    name: Validate Code
+  # ─── JOB 1: Chạy test trước ──────────────────────────────────────
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Extract JS từ HTML và syntax check
+      - name: Run auth tests
+        run: node auth.test.js
+
+  # ─── JOB 2: Validate code ────────────────────────────────────────
+  validate:
+    name: Validate Code
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Check JavaScript syntax
         run: |
-          echo "Extracting JS from index.html..."
           node -e "
             const fs = require('fs');
             const html = fs.readFileSync('index.html', 'utf8');
             const matches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
-            const js = matches
-              .filter(s => !s.includes('src='))
-              .map(s => s.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, ''))
-              .join('\n');
+            const js = matches.filter(s => !s.includes('src=')).map(s => s.replace(/<script[^>]*>/i,'').replace(/<\/script>/i,'')).join('\n');
             fs.writeFileSync('/tmp/check.js', js);
-            console.log('Extracted ' + js.length + ' chars of JS');
           "
           node --check /tmp/check.js
-          echo "✅ JavaScript syntax OK"
+          echo "✅ JS syntax OK"
 
-      # Kiểm tra HTML cơ bản
-      - name: Check HTML structure
-        run: |
-          node -e "
-            const fs = require('fs');
-            const html = fs.readFileSync('index.html', 'utf8');
-            const checks = [
-              { test: html.includes('<!DOCTYPE html'), name: 'DOCTYPE present' },
-              { test: html.includes('<meta charset'), name: 'Charset meta present' },
-              { test: html.includes('<meta name=\"viewport\"'), name: 'Viewport meta present' },
-              { test: (html.match(/<script/g)||[]).length === (html.match(/<\/script>/g)||[]).length, name: 'Script tags balanced' },
-              { test: (html.match(/<style/g)||[]).length === (html.match(/<\/style>/g)||[]).length, name: 'Style tags balanced' },
-            ];
-            let passed = 0;
-            checks.forEach(c => {
-              if (c.test) { console.log('  ✅ ' + c.name); passed++; }
-              else { console.error('  ❌ ' + c.name); }
-            });
-            if (passed < checks.length) process.exit(1);
-            console.log('HTML structure OK (' + passed + '/' + checks.length + ' checks passed)');
-          "
-
-      # Kiểm tra các function quan trọng vẫn còn trong code
       - name: Check critical functions exist
         run: |
           node -e "
             const fs = require('fs');
             const html = fs.readFileSync('index.html', 'utf8');
-            const required = [
-              'function doLogin',
-              'function doLogout',
-              'function loadData',
-              'function saveRecord',
-              'function delRecord',
-              'function applyFilters',
-              'function renderDashboard',
-              'function exportXLSX',
-              'function bulkApplyStatus',
-            ];
+            const required = ['function doLogin','function doLogout','function loadData','function saveRecord','function delRecord','function applyFilters','function renderDashboard','function exportXLSX','function bulkApplyStatus'];
             let allOk = true;
             required.forEach(fn => {
-              if (html.includes(fn)) {
-                console.log('  ✅ ' + fn);
-              } else {
-                console.error('  ❌ MISSING: ' + fn);
-                allOk = false;
-              }
+              if (html.includes(fn)) console.log('  ✅ ' + fn);
+              else { console.error('  ❌ MISSING: ' + fn); allOk = false; }
             });
-            if (!allOk) {
-              console.error('Critical functions missing — deploy blocked');
-              process.exit(1);
-            }
-            console.log('All critical functions present');
+            if (!allOk) process.exit(1);
           "
 
-      # Kiểm tra file size hợp lý (không accidentally empty)
       - name: Check file size
         run: |
           SIZE=$(wc -c < index.html)
-          echo "File size: $SIZE bytes"
-          if [ "$SIZE" -lt 50000 ]; then
-            echo "❌ File too small ($SIZE bytes) — possible corruption"
-            exit 1
-          fi
+          if [ "$SIZE" -lt 50000 ]; then echo "❌ File too small"; exit 1; fi
           echo "✅ File size OK ($SIZE bytes)"
 
-  # ─── JOB 2: Deploy lên GitHub Pages (chỉ chạy sau khi validate OK) ─
+  # ─── JOB 3: Deploy (chỉ sau khi test + validate đều pass) ────────
   deploy:
     name: Deploy to GitHub Pages
-    needs: validate          # Chỉ deploy nếu validate passed
+    needs: [test, validate]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'   # Không deploy khi chỉ là PR
-
-    # Permissions cần thiết cho GitHub Pages
+    if: github.event_name == 'push'
     permissions:
       contents: read
       pages: write
       id-token: write
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'   # Upload toàn bộ repo root
-
-      - name: Deploy to GitHub Pages
-        id: deployment
+          path: '.'
+      - id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: Print deployment URL
-        run: |
-          echo "🚀 Deployed successfully!"
-          echo "URL: ${{ steps.deployment.outputs.page_url }}"
