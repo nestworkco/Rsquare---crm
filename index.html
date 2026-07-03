@@ -307,6 +307,33 @@ tbody tr:hover .row-acts{opacity:1}
 .kpi-table .total-row td{background:#FAF9F6;border-top:2px solid var(--border-md);font-weight:600}
 .kpi-input{border:1px solid var(--border-md);border-radius:6px;padding:5px 8px;font-size:12px;font-family:var(--font);background:#FFFBEB;text-align:right;font-variant-numeric:tabular-nums;transition:border-color .15s,box-shadow .15s}
 .kpi-input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft)}
+.kpi-input.dirty{background:#FFF3CD;border-color:var(--amber);font-weight:600}
+/* KPI Save bar — xuất hiện khi có thay đổi chưa lưu */
+.kpi-save-bar{
+  display:none;position:sticky;bottom:0;left:0;right:0;z-index:50;
+  background:#1a1a24;border-top:2px solid var(--amber);
+  padding:12px 28px;
+  flex-direction:row;align-items:center;gap:14px;
+  box-shadow:0 -4px 24px rgba(0,0,0,.18);
+}
+.kpi-save-bar.visible{display:flex}
+.kpi-save-msg{font-size:13px;color:#f0a832;font-weight:500;flex:1}
+.kpi-save-msg span{font-size:11px;color:#a0a0b4;font-weight:400;margin-left:8px}
+.btn-kpi-save{
+  background:var(--amber);color:#1a0f00;border:none;
+  border-radius:var(--radius);padding:9px 22px;
+  font-size:13px;font-weight:700;cursor:pointer;
+  transition:opacity .15s;
+}
+.btn-kpi-save:hover{opacity:.85}
+.btn-kpi-save:disabled{opacity:.45;cursor:not-allowed}
+.btn-kpi-discard{
+  background:none;border:1px solid rgba(255,255,255,.15);
+  border-radius:var(--radius);padding:8px 16px;
+  font-size:12.5px;color:#a0a0b4;cursor:pointer;
+  transition:all .15s;
+}
+.btn-kpi-discard:hover{border-color:rgba(255,255,255,.35);color:#ededf3}
 
 /* ════════ MODAL ════════ */
 .overlay{display:none;position:fixed;inset:0;background:rgba(28,27,26,.45);z-index:200;align-items:flex-start;justify-content:center;padding:40px 20px;overflow:auto;backdrop-filter:blur(2px)}
@@ -750,6 +777,16 @@ tbody tr:hover .row-acts{opacity:1}
 </div>
 
 <div class="undo-bar" id="undoBar"><span id="undoMsg"></span><button class="undo-btn" onclick="undoLastKPI()">↩ Undo</button></div>
+
+<!-- KPI Save Bar — sticky bottom, shown when unsaved changes exist -->
+<div class="kpi-save-bar" id="kpiSaveBar">
+  <div class="kpi-save-msg">
+    ✏️ Có thay đổi chưa lưu
+    <span id="kpiDirtyCount"></span>
+  </div>
+  <button class="btn-kpi-discard" onclick="discardKPIChanges()">✕ Hủy thay đổi</button>
+  <button class="btn-kpi-save" id="btnKPISave" onclick="saveAllKPIChanges()">💾 Save tất cả</button>
+</div>
 <div class="toast" id="toast"></div>
 
 <div class="staff-modal-overlay" id="staffOverlay">
@@ -2374,16 +2411,19 @@ function renderKPI() {
             const revInput = kpiCanEdit
               ? `<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
                   <span style="font-size:11px;color:var(--muted);white-space:nowrap">${revDisplay}</span>
-                  <input class="kpi-input" style="width:90px;font-size:11px" value="${revR > 0 ? Math.round(revR) : ''}" placeholder="0"
-                    title="Enter raw number (e.g. 429548438)"
-                    onkeydown="if(event.key==='Enter')saveKPICell(${dataRowIdx},8,this.value,this)"
-                    onblur="if(this.value!==this.defaultValue&&this.value!=='')saveKPICell(${dataRowIdx},8,this.value,this)">
+                  <input class="kpi-input" style="width:90px;font-size:11px"
+                    value="${revR > 0 ? Math.round(revR) : ''}" placeholder="0"
+                    data-row="${dataRowIdx}" data-col="8" data-orig="${revR > 0 ? Math.round(revR) : ''}"
+                    title="Nhập số rồi bấm Save để lưu"
+                    oninput="trackKPIChange(this)">
                 </div>`
               : `<span style="color:${pctColor(pctRev/100)};font-weight:600">${revDisplay}</span>`;
             const conInput = kpiCanEdit
-              ? `<input class="kpi-input" style="width:50px;font-size:12px;text-align:center" value="${conR > 0 ? conR : ''}" placeholder="0"
-                  onkeydown="if(event.key==='Enter')saveKPICell(${dataRowIdx},9,this.value,this)"
-                  onblur="if(this.value!==this.defaultValue&&this.value!=='')saveKPICell(${dataRowIdx},9,this.value,this)">`
+              ? `<input class="kpi-input" style="width:50px;font-size:12px;text-align:center"
+                  value="${conR > 0 ? conR : ''}" placeholder="0"
+                  data-row="${dataRowIdx}" data-col="9" data-orig="${conR > 0 ? conR : ''}"
+                  title="Nhập số rồi bấm Save để lưu"
+                  oninput="trackKPIChange(this)">`
               : `<span style="color:${pctColor(pctCon/100)};font-weight:600">${conDisplay}</span>`;
             return `<tr>
               <td class="td-name">${shortN(name)}</td>
@@ -2539,6 +2579,106 @@ function showUndoBar(label, oldVal, newVal) {
 
 function hideUndo() {
   document.getElementById('undoBar').classList.remove('show');
+}
+
+// ── KPI CHANGE TRACKING ──────────────────────────────────────
+// Lưu các thay đổi chưa save: key = "row_col", value = { row, col, oldVal, newVal, inputEl }
+const kpiPendingChanges = {};
+
+function trackKPIChange(inputEl) {
+  const row  = Number(inputEl.dataset.row);
+  const col  = Number(inputEl.dataset.col);
+  const orig = inputEl.dataset.orig || '';
+  const cur  = inputEl.value.trim();
+  const key  = `${row}_${col}`;
+
+  if (cur !== orig) {
+    kpiPendingChanges[key] = { row, col, oldVal: orig, newVal: cur, inputEl };
+    inputEl.classList.add('dirty');
+  } else {
+    delete kpiPendingChanges[key];
+    inputEl.classList.remove('dirty');
+  }
+  updateKPISaveBar();
+}
+
+function updateKPISaveBar() {
+  const bar   = document.getElementById('kpiSaveBar');
+  const count = Object.keys(kpiPendingChanges).length;
+  const info  = document.getElementById('kpiDirtyCount');
+  if (count > 0) {
+    bar.classList.add('visible');
+    if (info) info.textContent = `(${count} ô thay đổi)`;
+  } else {
+    bar.classList.remove('visible');
+    if (info) info.textContent = '';
+  }
+}
+
+function discardKPIChanges() {
+  // Reset tất cả input về giá trị gốc
+  Object.values(kpiPendingChanges).forEach(({ oldVal, inputEl }) => {
+    inputEl.value = oldVal;
+    inputEl.classList.remove('dirty');
+  });
+  Object.keys(kpiPendingChanges).forEach(k => delete kpiPendingChanges[k]);
+  updateKPISaveBar();
+  showToast('Đã hủy tất cả thay đổi');
+}
+
+async function saveAllKPIChanges() {
+  const changes = Object.values(kpiPendingChanges);
+  if (!changes.length) return;
+
+  const btn = document.getElementById('btnKPISave');
+  btn.disabled = true;
+  btn.textContent = 'Đang lưu...';
+
+  const sheet = activeQuarter
+    ? `KPIs REPORT [2026]`
+    : 'KPIs REPORT [2026]';
+
+  let saved = 0, failed = 0;
+  for (const { row, col, oldVal, newVal, inputEl } of changes) {
+    const num = parseFloat(newVal.replace(/[^0-9.-]/g, ''));
+    if (isNaN(num)) { failed++; continue; }
+    try {
+      const res = await fetch(KPI_API, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'updateCell',
+          email: currentUser.email,
+          row, col,
+          value: num,
+          sheet
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        // Update data-orig to new value
+        inputEl.dataset.orig = newVal;
+        inputEl.classList.remove('dirty');
+        const key = `${row}_${col}`;
+        delete kpiPendingChanges[key];
+        saved++;
+      } else {
+        failed++;
+      }
+    } catch(e) {
+      failed++;
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💾 Save tất cả';
+  updateKPISaveBar();
+
+  if (failed === 0) {
+    showToast(`✅ Đã lưu ${saved} thay đổi`);
+    setTimeout(() => { kpiLoaded = false; loadKPI(); }, 800);
+  } else {
+    showToast(`⚠️ Lưu ${saved} thành công, ${failed} lỗi`, true);
+  }
 }
 
 async function undoLastKPI() {
