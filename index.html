@@ -243,6 +243,7 @@ tbody tr:hover .row-acts{opacity:1}
 .bsrc-sns{background:var(--slate-soft);color:var(--slate)}
 .bsrc-dbr{background:var(--slate-soft);color:var(--slate)}
 .bsrc-edm{background:var(--slate-soft);color:var(--slate)}
+.bsrc-sdteam{background:var(--green-soft);color:var(--green)}
 /* process — pipeline depth: darker badge = further along */
 .bpr-sf{background:var(--slate-soft);color:var(--slate)}
 .bpr-meet{background:var(--navy-soft);color:var(--navy)}
@@ -595,6 +596,7 @@ tbody tr:hover .row-acts{opacity:1}
         <label class="msd-item"><input type="checkbox" value="INTRO" onchange="msdChange('source')"><label>INTRO</label></label>
         <label class="msd-item"><input type="checkbox" value="DBR VISIT" onchange="msdChange('source')"><label>DBR VISIT</label></label>
         <label class="msd-item"><input type="checkbox" value="EDM FLYER" onchange="msdChange('source')"><label>EDM FLYER</label></label>
+        <label class="msd-item"><input type="checkbox" value="SD TEAM" onchange="msdChange('source')"><label>SD TEAM</label></label>
         <div class="msd-divider"></div>
         <span class="msd-clear" onclick="clearMsd('source')">Clear</span>
       </div>
@@ -729,7 +731,7 @@ tbody tr:hover .row-acts{opacity:1}
         <div><label>Priority</label><select id="m-pri"><option>P0</option><option>P1</option><option selected>P2</option><option>P3</option></select></div>
         <div><label>Status</label><select id="m-sta"><option selected>Following</option><option>Deal</option><option>Success</option><option>Fail</option></select></div>
         <div><label>Process</label><select id="m-prc"><option>Send Flyer</option><option>Meeting</option><option>Negotiate</option><option>Go DD</option></select></div>
-        <div><label>Source</label><select id="m-src"><option>CALL SALES</option><option>WEBSITE</option><option>SALE VISIT</option><option>SNS</option><option>INTRO</option><option>DBR VISIT</option><option>EDM FLYER</option></select></div>
+        <div><label>Source</label><select id="m-src"><option>CALL SALES</option><option>WEBSITE</option><option>SALE VISIT</option><option>SNS</option><option>INTRO</option><option>DBR VISIT</option><option>EDM FLYER</option><option>SD TEAM</option></select></div>
         <div><label>Incharge</label><select id="m-inc" onchange="onIncChange()"></select></div>
         <div><label>Start Day</label><input type="date" id="m-sd"></div>
 
@@ -1260,6 +1262,7 @@ function srcBadge(s){
   if(su==='SNS')return'bsrc-sns';
   if(su.includes('DBR'))return'bsrc-dbr';
   if(su.includes('EDM'))return'bsrc-edm';
+  if(su.includes('SD TEAM')||su.includes('SD_TEAM'))return'bsrc-sdteam';
   return'';
 }
 function prcBadge(p){
@@ -1334,6 +1337,7 @@ function exportXLSX(){
       'SALE VISIT':{fg:C.green, bg:C.greenSoft},
       'INTRO':     {fg:C.amber, bg:C.amberSoft},
       'SNS':       {fg:C.slate, bg:C.slateSoft},
+      'SD TEAM':   {fg:C.green, bg:C.greenSoft},
     };
     const PRC_C = {
       'Send Flyer':{fg:C.slate, bg:C.slateSoft},
@@ -1720,7 +1724,6 @@ function openModal(){
   document.getElementById('transferBanner').classList.remove('visible');
   document.getElementById('modalTitle').textContent='Add new client';
   document.getElementById('btnSave').textContent='Save to Sheets';
-  document.getElementById('btnSave').style.display='';  // fix: đảm bảo luôn hiện
   ['m-co','m-ctc','m-cin','m-sd','m-exp','m-min','m-max','m-bud','m-loc','m-nat','m-typ','m-note','m-lct','m-nxa'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('m-pri').value='P2';document.getElementById('m-sta').value='Following';
   document.getElementById('m-src').value='CALL SALES';document.getElementById('m-prc').value='Send Flyer';
@@ -1761,7 +1764,6 @@ function openEdit(dataIdx){
   document.getElementById('transferBanner').classList.remove('visible');
   document.getElementById('modalTitle').textContent='Edit client';
   document.getElementById('btnSave').textContent='Save changes';
-  document.getElementById('btnSave').style.display='';  // fix: đảm bảo luôn hiện
   document.getElementById('m-co').value=v(row,'co');
   document.getElementById('m-pri').value=v(row,'pri')||'P2';
   document.getElementById('m-inc').value=resolveIncharge(v(row,'inc'));
@@ -1799,7 +1801,6 @@ function openEdit(dataIdx){
 function closeModal(){
   document.getElementById('modal').classList.remove('open');
   document.getElementById('transferBanner').classList.remove('visible');
-  document.getElementById('btnSave').style.display='';  // fix: reset để lần mở sau luôn hiện
   editingDataIdx=null;editingId=null;editingOrigIncharge=null;
 }
 
