@@ -479,6 +479,7 @@ tbody tr:hover .row-acts{opacity:1}
     <input type="password" id="pinInput" placeholder="Enter your PIN" maxlength="8" inputmode="numeric" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="btn-login" id="btnLogin" onclick="doLogin()">Sign in</button>
     <div class="login-err" id="loginErr"></div>
+    <div style="margin-top:10px;text-align:center;font-size:12px"><a href="javascript:void(0)" onclick="doForgotPin()" style="color:var(--muted);text-decoration:underline;cursor:pointer">Quên PIN?</a></div>
   </div>
 </div>
 
@@ -488,8 +489,14 @@ tbody tr:hover .row-acts{opacity:1}
     <img class="login-logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" alt="Rsquare">
     <div class="login-divider"></div>
     <div class="setup-pin-steps"><div class="setup-step done" id="sp1"></div><div class="setup-step done" id="sp2"></div><div class="setup-step" id="sp3"></div></div>
-    <div class="login-title" style="color:var(--green)">🔐 Set your PIN</div>
+    <div class="login-title" id="setupTitle" style="color:var(--green)">🔐 Set your PIN</div>
     <div class="login-sub" id="setupWelcome">Welcome! Create a personal PIN to secure your account.</div>
+    <label class="login-label">Mã xác nhận (gửi tới email của bạn)</label>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="setupCode" placeholder="6 chữ số" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="flex:1">
+      <button class="btn-login" id="btnSendCode" type="button" onclick="doRequestCode()" style="width:auto;white-space:nowrap;padding:0 14px">Gửi mã</button>
+    </div>
+    <div class="login-sub" id="codeStatus" style="min-height:16px;margin:6px 0 2px"></div>
     <label class="login-label">New PIN (4–8 digits)</label>
     <input type="password" id="setupPin1" placeholder="Enter PIN" maxlength="8" inputmode="numeric" autocomplete="new-password"
       oninput="updatePinStrength()" onkeydown="if(event.key==='Enter')document.getElementById('setupPin2').focus()">
@@ -499,6 +506,23 @@ tbody tr:hover .row-acts{opacity:1}
       onkeydown="if(event.key==='Enter')doSetupPin()">
     <button class="btn-login" id="btnSetupPin" onclick="doSetupPin()" style="background:var(--green)">Set PIN &amp; Sign in</button>
     <div class="login-err" id="setupPinErr"></div>
+  </div>
+</div>
+
+<!-- CHANGE PIN MODAL -->
+<div class="staff-modal-overlay" id="changePinOverlay">
+  <div class="login-card" style="max-width:360px">
+    <div class="login-title">Đổi PIN</div>
+    <div class="login-sub">Nhập PIN hiện tại và PIN mới của bạn.</div>
+    <label class="login-label">PIN hiện tại</label>
+    <input type="password" id="cp-old" maxlength="8" inputmode="numeric" autocomplete="current-password" placeholder="PIN hiện tại">
+    <label class="login-label">PIN mới (4–8 chữ số)</label>
+    <input type="password" id="cp-new" maxlength="8" inputmode="numeric" autocomplete="new-password" placeholder="PIN mới">
+    <label class="login-label">Xác nhận PIN mới</label>
+    <input type="password" id="cp-confirm" maxlength="8" inputmode="numeric" autocomplete="new-password" placeholder="Nhập lại PIN mới" onkeydown="if(event.key==='Enter')doChangePin()">
+    <button class="btn-login" id="btnChangePin" onclick="doChangePin()" style="margin-top:12px">Đổi PIN</button>
+    <button class="btn-logout" onclick="closeChangePin()" style="margin-top:8px;width:100%">Hủy</button>
+    <div class="login-err" id="changePinErr"></div>
   </div>
 </div>
 
@@ -523,6 +547,7 @@ tbody tr:hover .row-acts{opacity:1}
       </div>
       <button class="btn-add hidden" id="btnAdd" onclick="openModal()">+ Add client</button>
     <button class="btn-add hidden" id="btnAddStaff" style="background:var(--slate)" onclick="openAddStaff()">👤 Add staff</button>
+      <button class="btn-logout" onclick="openChangePin()">Đổi PIN</button>
       <button class="btn-logout" onclick="doLogout()">Sign out</button>
     </div>
   </div>
@@ -824,19 +849,54 @@ async function doLogin(){
 }
 
 // Màn hình tự đặt PIN lần đầu
-let _setupEmail='';
-function showSetupPin(email,name){
+let _setupEmail='',_setupReset=false;
+function showSetupPin(email,name,isReset){
   _setupEmail=email;
+  _setupReset=!!isReset;
   document.getElementById('loginWrap').classList.add('hidden');
   document.getElementById('setupPinWrap').classList.remove('hidden');
-  document.getElementById('setupWelcome').textContent=`Welcome${name?' '+name.split(' ').pop():''}! Create a personal PIN to secure your account.`;
+  document.getElementById('setupTitle').textContent=isReset?'🔑 Đặt lại PIN':'🔐 Set your PIN';
+  document.getElementById('setupWelcome').textContent=isReset
+    ? `Bấm "Gửi mã" để nhận mã xác nhận tại ${email}, rồi đặt PIN mới.`
+    : `Welcome${name?' '+name.split(' ').pop():''}! Bấm "Gửi mã" để nhận mã xác nhận, rồi tạo PIN.`;
+  document.getElementById('setupCode').value='';
+  const cs=document.getElementById('codeStatus');cs.textContent='';cs.style.color='';
   document.getElementById('setupPin1').value='';
   document.getElementById('setupPin2').value='';
   document.getElementById('setupPinErr').textContent='';
+  const sc=document.getElementById('btnSendCode');sc.disabled=false;
   document.getElementById('pinStrength').className='pin-strength';
   document.getElementById('pinStrength').style.width='0';
   document.getElementById('sp3').classList.remove('done');
-  setTimeout(()=>document.getElementById('setupPin1').focus(),100);
+  setTimeout(()=>document.getElementById('setupCode').focus(),100);
+}
+
+// Xin mã xác nhận gửi tới chính email của người dùng
+async function doRequestCode(){
+  const status=document.getElementById('codeStatus');
+  const btn=document.getElementById('btnSendCode');
+  status.style.color='';status.textContent='Đang gửi mã...';
+  btn.disabled=true;
+  try{
+    const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'requestSetupCode',email:_setupEmail})});
+    const json=await res.json();
+    status.style.color='var(--green)';
+    status.textContent=json.message||'Nếu email hợp lệ, mã đã được gửi. Kiểm tra hộp thư (kể cả Spam).';
+  }catch(e){
+    status.style.color='var(--accent)';
+    status.textContent='Lỗi kết nối khi gửi mã. Thử lại.';
+  }
+  // cho gửi lại sau 30s (tránh spam, vẫn cho phép nếu chưa nhận được)
+  setTimeout(()=>{btn.disabled=false;},30000);
+}
+
+// Quên PIN — dùng lại màn setup ở chế độ đặt lại
+function doForgotPin(){
+  const email=document.getElementById('emailInput').value.trim().toLowerCase();
+  const errEl=document.getElementById('loginErr');
+  errEl.textContent='';
+  if(!email||!email.endsWith('@rsquare.vn')){errEl.textContent='Nhập email @rsquare.vn của bạn trước, rồi bấm "Quên PIN?"';return;}
+  showSetupPin(email,null,true);
 }
 
 function updatePinStrength(){
@@ -849,17 +909,19 @@ function updatePinStrength(){
 }
 
 async function doSetupPin(){
+  const code=document.getElementById('setupCode').value.trim();
   const newPin=document.getElementById('setupPin1').value.trim();
   const confirmPin=document.getElementById('setupPin2').value.trim();
   const errEl=document.getElementById('setupPinErr');
   errEl.textContent='';
+  if(!code){errEl.textContent='Vui lòng nhập mã xác nhận đã gửi tới email của bạn';return;}
   if(!newPin||newPin.length<4){errEl.textContent='PIN phải từ 4–8 chữ số';return;}
   if(!/^\d+$/.test(newPin)){errEl.textContent='PIN chỉ được chứa chữ số';return;}
   if(newPin!==confirmPin){errEl.textContent='PIN xác nhận không khớp';return;}
   const btn=document.getElementById('btnSetupPin');
   btn.disabled=true;btn.textContent='Setting PIN...';
   try{
-    const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'setupPin',email:_setupEmail,newPin,confirmPin})});
+    const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'setupPin',email:_setupEmail,code,newPin,confirmPin})});
     const json=await res.json();
     if(!json.success){errEl.textContent=json.error||'Failed';btn.disabled=false;btn.textContent='Set PIN & Sign in';return;}
     // PIN set + session created — go straight to app
@@ -872,6 +934,40 @@ async function doSetupPin(){
     showToast('PIN set successfully! Welcome to Rsquare CRM.');
     showApp();
   }catch(e){errEl.textContent='Connection error. Please try again.';btn.disabled=false;btn.textContent='Set PIN & Sign in';}
+}
+
+function openChangePin(){
+  document.getElementById('cp-old').value='';
+  document.getElementById('cp-new').value='';
+  document.getElementById('cp-confirm').value='';
+  document.getElementById('changePinErr').textContent='';
+  const b=document.getElementById('btnChangePin');b.disabled=false;b.textContent='Đổi PIN';
+  document.getElementById('changePinOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('cp-old').focus(),100);
+}
+function closeChangePin(){
+  document.getElementById('changePinOverlay').classList.remove('open');
+}
+async function doChangePin(){
+  const oldPin=document.getElementById('cp-old').value.trim();
+  const newPin=document.getElementById('cp-new').value.trim();
+  const confirmPin=document.getElementById('cp-confirm').value.trim();
+  const errEl=document.getElementById('changePinErr');
+  errEl.textContent='';
+  if(!oldPin){errEl.textContent='Nhập PIN hiện tại';return;}
+  if(!newPin||newPin.length<4||newPin.length>8){errEl.textContent='PIN mới phải từ 4–8 chữ số';return;}
+  if(!/^\d+$/.test(newPin)){errEl.textContent='PIN mới chỉ được chứa chữ số';return;}
+  if(newPin!==confirmPin){errEl.textContent='PIN xác nhận không khớp';return;}
+  if(!currentUser){errEl.textContent='Phiên đã hết hạn, hãy đăng nhập lại';return;}
+  const btn=document.getElementById('btnChangePin');
+  btn.disabled=true;btn.textContent='Đang đổi...';
+  try{
+    const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'changePin',email:currentUser.email,token:currentUser.token,oldPin,newPin,confirmPin})});
+    const json=await res.json();
+    if(!json.success){errEl.textContent=json.error||'Đổi PIN thất bại';btn.disabled=false;btn.textContent='Đổi PIN';return;}
+    closeChangePin();
+    showToast('Đổi PIN thành công.');
+  }catch(e){errEl.textContent='Lỗi kết nối. Thử lại.';btn.disabled=false;btn.textContent='Đổi PIN';}
 }
 
 function doLogout(){
