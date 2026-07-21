@@ -786,14 +786,6 @@ tbody tr:hover .row-acts{opacity:1}
       <button class="mc" onclick="closeAddStaff()">×</button>
     </div>
     <div class="staff-modal-body">
-      <div class="staff-hint">
-        <strong>Before adding:</strong><br>
-        1. Create a new Google Sheet for this staff member in Drive<br>
-        2. Copy the structure from an existing member's sheet (header row A→Z)<br>
-        3. Copy the <strong>Sheet ID</strong> from the URL:<br>
-        <code>docs.google.com/spreadsheets/d/<strong>[SHEET ID]</strong>/edit</code><br>
-        4. The tab name inside that sheet must be <code>Customer List</code>
-      </div>
       <div class="staff-field">
         <label>Full name *</label>
         <input type="text" id="ns-name" placeholder="e.g. Minh Nguyễn Văn">
@@ -802,12 +794,7 @@ tbody tr:hover .row-acts{opacity:1}
         <label>Work email * (@rsquare.vn)</label>
         <input type="text" id="ns-email" placeholder="e.g. minhvn@rsquare.vn">
       </div>
-      <div class="staff-field">
-        <label>Google Sheet ID *</label>
-        <input type="text" id="ns-ssid" placeholder="1aBcDeFgHiJkLmNoPqRsTuVwXyZ...">
-      </div>
       <div class="staff-result" id="staffResult"></div>
-      <div class="staff-script-box" id="staffScriptBox"></div>
     </div>
     <div class="staff-actions">
       <button class="btn-cm" onclick="closeAddStaff()">Cancel</button>
@@ -1920,9 +1907,7 @@ function onIncChange(){
 function openAddStaff(){
   document.getElementById('ns-name').value='';
   document.getElementById('ns-email').value='';
-  document.getElementById('ns-ssid').value='';
   document.getElementById('staffResult').style.display='none';
-  document.getElementById('staffScriptBox').style.display='none';
   document.getElementById('btnStaffSave').disabled=false;
   document.getElementById('btnStaffSave').textContent='Add staff member';
   document.getElementById('staffOverlay').classList.add('open');
@@ -1932,10 +1917,8 @@ function closeAddStaff(){document.getElementById('staffOverlay').classList.remov
 async function saveNewStaff(){
   const name=document.getElementById('ns-name').value.trim();
   const email=document.getElementById('ns-email').value.trim().toLowerCase();
-  const ssid=document.getElementById('ns-ssid').value.trim();
   const res=document.getElementById('staffResult');
-  const box=document.getElementById('staffScriptBox');
-  if(!name||!email||!ssid){
+  if(!name||!email){
     res.className='staff-result err';res.textContent='Please fill in all fields.';res.style.display='block';return;
   }
   if(!email.endsWith('@rsquare.vn')){
@@ -1944,29 +1927,31 @@ async function saveNewStaff(){
   const btn=document.getElementById('btnStaffSave');
   btn.disabled=true;btn.textContent='Adding…';
   try{
-    // Call Apps Script to register new staff
-    const payload={action:'addStaff',email:currentUser.email,token:currentUser.token,newEmail:email,newName:name,newSsid:ssid};
+    // Server tự gán 1 sheet trống có sẵn trong pool — không cần Sheet ID
+    const payload={action:'assignStaffSlot',email:currentUser.email,token:currentUser.token,newEmail:email,newName:name};
     const r=await fetch(API,{method:'POST',body:JSON.stringify(payload)});
     const json=await r.json();
     if(json.success){
       res.className='staff-result ok';
       res.innerHTML=`✓ <strong>${esc(name)}</strong> added successfully! They can now log in with <strong>${esc(email)}</strong>.<br><br>Ask them to open the app and sign in — their data will be isolated to their own sheet.`;
       res.style.display='block';
-      box.style.display='none';
       btn.textContent='Done';
       // Update local CANONICAL_INCHARGE if not already there
       if(!CANONICAL_INCHARGE.includes(name)) CANONICAL_INCHARGE.push(name);
       syncInchargeFilter();
+    } else if(json.error && json.error.indexOf('Hết sheet trống')>=0){
+      res.className='staff-result err';
+      res.innerHTML='Hết sheet trống trong pool. Liên hệ admin để chạy <code>createStaffPool(n)</code> trong Apps Script editor rồi thử lại.';
+      res.style.display='block';
+      btn.textContent='Add staff member';
+      btn.disabled=false;
     } else {
       throw new Error(json.error||'Server error');
     }
   }catch(e){
-    // Fallback: show manual Apps Script snippet
     res.className='staff-result err';
-    res.innerHTML='Could not update automatically (Apps Script needs redeployment).<br><strong>Copy the snippet below and add it to the USERS object in your Apps Script:</strong>';
+    res.innerHTML='Could not add staff member: '+esc(e.message)+'<br>Kiểm tra kết nối hoặc thử lại sau.';
     res.style.display='block';
-    box.textContent=`  '${email}': { name: '${name}', role: 'staff', ssid: '${ssid}', sheet: 'Customer List' },`;
-    box.style.display='block';
     btn.textContent='Add staff member';
     btn.disabled=false;
   }
