@@ -511,18 +511,31 @@ tbody tr:hover .row-acts{opacity:1}
 
 <!-- CHANGE PIN MODAL -->
 <div class="staff-modal-overlay" id="changePinOverlay">
-  <div class="login-card" style="max-width:360px">
-    <div class="login-title">Đổi PIN</div>
-    <div class="login-sub">Nhập PIN hiện tại và PIN mới của bạn.</div>
-    <label class="login-label">PIN hiện tại</label>
-    <input type="password" id="cp-old" maxlength="8" inputmode="numeric" autocomplete="current-password" placeholder="PIN hiện tại">
-    <label class="login-label">PIN mới (4–8 chữ số)</label>
-    <input type="password" id="cp-new" maxlength="8" inputmode="numeric" autocomplete="new-password" placeholder="PIN mới">
-    <label class="login-label">Xác nhận PIN mới</label>
-    <input type="password" id="cp-confirm" maxlength="8" inputmode="numeric" autocomplete="new-password" placeholder="Nhập lại PIN mới" onkeydown="if(event.key==='Enter')doChangePin()">
-    <button class="btn-login" id="btnChangePin" onclick="doChangePin()" style="margin-top:12px">Đổi PIN</button>
-    <button class="btn-logout" onclick="closeChangePin()" style="margin-top:8px;width:100%">Hủy</button>
-    <div class="login-err" id="changePinErr"></div>
+  <div class="staff-modal" style="width:400px">
+    <div class="mh">
+      <div class="mt">Đổi PIN</div>
+      <button class="mc" onclick="closeChangePin()">×</button>
+    </div>
+    <div class="staff-modal-body">
+      <div class="staff-hint" style="margin-bottom:20px">Nhập PIN hiện tại và PIN mới của bạn.</div>
+      <div class="staff-field">
+        <label>PIN hiện tại</label>
+        <input type="password" id="cp-old" maxlength="8" inputmode="numeric" autocomplete="current-password" placeholder="PIN hiện tại">
+      </div>
+      <div class="staff-field">
+        <label>PIN mới (4–8 chữ số)</label>
+        <input type="password" id="cp-new" maxlength="8" inputmode="numeric" autocomplete="new-password" placeholder="PIN mới">
+      </div>
+      <div class="staff-field">
+        <label>Xác nhận PIN mới</label>
+        <input type="password" id="cp-confirm" maxlength="8" inputmode="numeric" autocomplete="new-password" placeholder="Nhập lại PIN mới" onkeydown="if(event.key==='Enter')doChangePin()">
+      </div>
+      <div class="login-err" id="changePinErr"></div>
+    </div>
+    <div class="staff-actions">
+      <button class="btn-cm" onclick="closeChangePin()">Hủy</button>
+      <button class="btn-staff-save" id="btnChangePin" onclick="doChangePin()">Đổi PIN</button>
+    </div>
   </div>
 </div>
 
@@ -1810,18 +1823,16 @@ function openModal(){
   ['m-co','m-ctc','m-cin','m-sd','m-exp','m-min','m-max','m-bud','m-loc','m-nat','m-typ','m-note','m-lct','m-nxa'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('m-pri').value='P2';document.getElementById('m-sta').value='Following';
   document.getElementById('m-src').value='CALL SALES';document.getElementById('m-prc').value='Send Flyer';
-  // Use EMAIL_TO_FULL to get canonical full name; CANONICAL_INCHARGE guarantees it's in the list
-  const EMAIL_TO_FULL = {
-    'ccm@rsquare.vn':    'ChungMyeong Chae',
-    'huypq@rsquare.vn':  'Huy Phan Quốc',
-    'trucln@rsquare.vn':  'Trúc La Nguyên',
-    'tuyenpk@rsquare.vn': 'Tuyền Phạm Kim',
-    'tuannc@rsquare.vn':  'Tuấn Nguyễn Công',
-    'lointg@rsquare.vn':  'Lợi Nguyễn Thị Giai',
-    'huyna@rsquare.vn':   'Huy Nguyễn An',
-  };
-  const myFull = EMAIL_TO_FULL[currentUser.email] || resolveIncharge(currentUser.name);
+  // currentUser.name đã là tên đầy đủ do server trả về lúc login (u.name trong
+  // USERS hoặc _CRM_CONFIG) — không cần bảng ánh xạ tay, tự đúng cho cả người
+  // mới thêm qua "Add staff" lẫn người cũ.
+  const myFull = resolveIncharge(currentUser.name);
   const incSel = document.getElementById('m-inc');
+  // Phòng trường hợp dropdown chưa kịp load xong tên này (do CANONICAL_INCHARGE
+  // đang sync) — tự chèn option để field không bị hiện trống.
+  if(myFull && ![...incSel.options].some(o=>o.value===myFull)){
+    incSel.appendChild(new Option(myFull, myFull));
+  }
   incSel.value = myFull;
   // Staff: lock incharge to themselves — only manager can change
   if(currentUser.role==='staff'){
@@ -1939,6 +1950,7 @@ async function saveNewStaff(){
       // Update local CANONICAL_INCHARGE if not already there
       if(!CANONICAL_INCHARGE.includes(name)) CANONICAL_INCHARGE.push(name);
       syncInchargeFilter();
+      populateIncModal();
     } else if(json.error && json.error.indexOf('Hết sheet trống')>=0){
       res.className='staff-result err';
       res.innerHTML='Hết sheet trống trong pool. Liên hệ admin để chạy <code>createStaffPool(n)</code> trong Apps Script editor rồi thử lại.';
@@ -2699,6 +2711,8 @@ async function saveKPICell(rowIndex, colIndex, value, inputEl) {
 
 document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key==='Enter') doLogin();});
 document.getElementById('modal').addEventListener('keydown',e=>{if(e.key==='Escape') closeModal();});
+document.getElementById('staffOverlay').addEventListener('keydown',e=>{if(e.key==='Escape') closeAddStaff();});
+document.getElementById('changePinOverlay').addEventListener('keydown',e=>{if(e.key==='Escape') closeChangePin();});
 
 const saved=localStorage.getItem('rsq_user');
 if(saved){
