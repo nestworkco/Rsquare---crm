@@ -824,6 +824,18 @@ tbody tr:hover .row-acts{opacity:1}
 const API = '/api/crm';
 let currentUser=null,allData=[],filtered=[],editingDataIdx=null,editingId=null,editingOrigIncharge=null,sortCol=-1,sortDir=1;
 
+// Chuẩn hoá currentUser NGAY TẠI NGUỒN (login / setup PIN / khôi phục session).
+// Lý do: name được so khớp tuyệt đối (===) với cột Incharge trong CRM và cột
+// Name trong sheet KPI. Chỉ cần dư 1 khoảng trắng đầu/cuối trong _CRM_CONFIG là
+// so khớp trượt âm thầm — không báo lỗi, chỉ hiện dữ liệu trống. Trim ở đây
+// một lần thì mọi chỗ dùng currentUser.name phía sau đều an toàn.
+function normalizeUser(u){
+  if(!u) return u;
+  u.name  = String(u.name  ?? '').trim().replace(/\s+/g,' '); // gộp khoảng trắng thừa ở giữa
+  u.email = String(u.email ?? '').trim().toLowerCase();
+  return u;
+}
+
 /* ═══════════════════ I18N — EN default, VI toggle ═══════════════════ */
 const I18N = {
   en: {
@@ -1001,7 +1013,7 @@ async function doLogin(){
       return;
     }
     if(!json.success){errEl.textContent=json.error||t('errLoginFailed');btn.disabled=false;btn.textContent=t('btnSignIn');return;}
-    currentUser={email,name:json.name,role:json.role,token:json.token,expiresAt:json.expiresAt};
+    currentUser=normalizeUser({email,name:json.name,role:json.role,token:json.token,expiresAt:json.expiresAt});
     localStorage.setItem('rsq_user',JSON.stringify(currentUser));
     document.getElementById('pinInput').value='';
     showApp();
@@ -1086,7 +1098,7 @@ async function doSetupPin(){
     if(!json.success){errEl.textContent=json.error||t('errFailed');btn.disabled=false;btn.textContent=t('btnSetPinSignIn');return;}
     // PIN set + session created — go straight to app
     document.getElementById('sp3').classList.add('done');
-    currentUser={email:_setupEmail,name:json.name,role:json.role,token:json.token,expiresAt:json.expiresAt};
+    currentUser=normalizeUser({email:_setupEmail,name:json.name,role:json.role,token:json.token,expiresAt:json.expiresAt});
     localStorage.setItem('rsq_user',JSON.stringify(currentUser));
     document.getElementById('setupPin1').value='';
     document.getElementById('setupPin2').value='';
@@ -2086,7 +2098,9 @@ function openAddStaff(){
 function closeAddStaff(){document.getElementById('staffOverlay').classList.remove('open');}
 
 async function saveNewStaff(){
-  const name=document.getElementById('ns-name').value.trim();
+  // Chuẩn hoá ngay khi nhập: trim + gộp khoảng trắng thừa ở giữa, để tên ghi
+  // vào _CRM_CONFIG luôn khớp tuyệt đối với cột Name bên sheet KPI
+  const name=document.getElementById('ns-name').value.trim().replace(/\s+/g,' ');
   const email=document.getElementById('ns-email').value.trim().toLowerCase();
   const res=document.getElementById('staffResult');
   if(!name||!email){
@@ -2453,8 +2467,15 @@ async function loadKPI() {
       fetch(`${KPI_API}?email=${encodeURIComponent(currentUser.email)}&sheet=KPIs REPORT [2026]`),
       fetch(`${KPI_API}?email=${encodeURIComponent(currentUser.email)}&sheet=SUMMARY TABLE [2026]`)
     ]);
-    const j1 = await r1.json();
-    const j2 = await r2.json();
+    const raw1 = await r1.text();
+    const raw2 = await r2.text();
+    let j1, j2;
+    try { j1 = JSON.parse(raw1); j2 = JSON.parse(raw2); }
+    catch(parseErr) {
+      // KPI backend returned non-JSON (usually its default HTML error page) —
+      // most common cause: this account isn't registered in the KPI sheet/script yet.
+      throw new Error('This account is not yet set up in the KPI Dashboard system. Contact the admin to add it there (this is separate from the main CRM).');
+    }
     if (j1.error) throw new Error(j1.error);
     kpiData = j1.data || [];
     kpiHeaders = j1.headers || [];
@@ -2512,18 +2533,11 @@ function renderKPI() {
   const isManagerView = currentUser.role === 'manager';
 
   // Overview cards: manager=team total, staff=own row only
-  // Email → display name as it appears in the KPI sheet
-  const KPI_NAME_MAP = {
-    'ccm@rsquare.vn':    'ChungMyeong Chae',
-    'huypq@rsquare.vn':  'Huy Phan Quốc',
-    'trucln@rsquare.vn':  'Trúc La Nguyên',
-    'tuyenpk@rsquare.vn': 'Tuyền Phạm Kim',
-    'tuannc@rsquare.vn':  'Tuấn Nguyễn Công',
-    'lointg@rsquare.vn':  'Lợi Nguyễn Thị Giai',
-    'huyna@rsquare.vn':   'Huy Nguyễn An',
-  };
+  // currentUser.name đã là tên hiển thị đúng do server trả về lúc login
+  // (khớp với cột "name" trong sheet KPI) — không cần bảng ánh xạ tay,
+  // tự đúng cho cả người mới thêm qua "Add staff" lẫn người cũ.
   // shortN is now global — defined at module level
-  const myKPIName = KPI_NAME_MAP[currentUser.email] || currentUser.name;
+  const myKPIName = String(currentUser.name || '').trim();
   const statsData = isManagerView
     ? qData
     : qData.filter(r => String(kc(r,'name')).trim() === myKPIName);
@@ -2882,7 +2896,7 @@ if(saved){
   try{
     const u=JSON.parse(saved);
     if(u&&u.token&&u.expiresAt&&Date.now()<u.expiresAt){
-      currentUser=u;showApp();
+      currentUser=normalizeUser(u);showApp();
     } else {
       // Session expired — clear and show login
       localStorage.removeItem('rsq_user');
